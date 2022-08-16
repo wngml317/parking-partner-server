@@ -3,9 +3,7 @@ class Config :
     JWT_ACCESS_TOKEN_EXPIRES = False
     PROPAGATE_EXCEPTIONS = True
 
-    # AWS uk
-    ACCESS_KEY = 'AKIAQMUHGEAUXZD7N7ME'
-    SECRET_ACCESS = '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'  
+     
 
     # S3 버킷이름과, 기본 URL 주소 셋팅
     S3_BUCKET = 'uk-image-test'
