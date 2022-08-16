@@ -134,7 +134,7 @@ class UserLoginResource(Resource) :
             # 문자열로 바꿔서 다시 저장해서 보낸다.
             i = 0
             for record in result_list :
-                result_list[i]['createdAt'] = record['createdAt'].isoformat()
+                result_list[i]['created_at'] = record['created_at'].isoformat()
                 i = i + 1                
 
             cursor.close()
