@@ -3,6 +3,7 @@ from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from config import Config
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
+from resources.operation  import prkOperation
 
 
 app = Flask(__name__)
@@ -24,6 +25,8 @@ api = Api(app)
 api.add_resource(UserRegisterResource, '/users/register')
 api.add_resource(UserLoginResource, '/users/login')
 api.add_resource(UserLogoutResource, '/users/logout')
+api.add_resource(prkOperation, '/operation/<int:prk_center_id>')
+
 
 if __name__ == '__main__' :
     app.run()
