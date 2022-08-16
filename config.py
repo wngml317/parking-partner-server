@@ -4,8 +4,8 @@ class Config :
     PROPAGATE_EXCEPTIONS = True
 
     # AWS uk
-    ACCESS_KEY = 'AKIA2EOOWFSVZZWTLCP3'
-    SECRET_ACCESS = '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'  
+    ACCESS_KEY = 'AKIAQMUHGEAUXZD7N7ME'
+    SECRET_ACCESS = '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'  
 
     # S3 버킷이름과, 기본 URL 주소 셋팅
     S3_BUCKET = 'uk-image-test'
