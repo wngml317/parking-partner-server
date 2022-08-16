@@ -25,7 +25,7 @@ api = Api(app)
 api.add_resource(UserRegisterResource, '/users/register')
 api.add_resource(UserLoginResource, '/users/login')
 api.add_resource(UserLogoutResource, '/users/logout')
-api.add_resource(prkOperation, '/operation/<int:prk_center_id>')
+api.add_resource(prkOperation, '/operation/<str:prk_center_id>')
 
 
 if __name__ == '__main__' :
