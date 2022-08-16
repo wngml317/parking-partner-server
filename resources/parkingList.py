@@ -10,6 +10,8 @@ class ParkingListResource(Resource) :
     def get(self) :
 
         # 1. 클라이언트로부터 데이터를 받아온다.
+        latitude = request.args['latitude']
+        longitude = request.args['longitude']
         offset = request.args['offset']
         limit = request.args['limit']
         order = request.args['order']
@@ -21,10 +23,10 @@ class ParkingListResource(Resource) :
         try : 
             connection = get_connection()
 
-            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres,
+            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,
                         r.pkfc_ParkingLots_total, r.pkfc_Available_ParkingLots_total,
                         o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
-                        sqrt(pow(33-prk_plce_entrc_la, 2)+ pow(126-prk_plce_entrc_lo, 2)) as distance,
+                        sqrt(pow({}-prk_plce_entrc_la, 2)+ pow({}-prk_plce_entrc_lo, 2)) as distance,
                         o.parking_chrge_bs_chrg / o.parking_chrge_bs_time as charge,
                         (r.pkfc_ParkingLots_total- r.pkfc_Available_ParkingLots_total) / r.pkfc_ParkingLots_total as available
                         from facility f
@@ -33,7 +35,7 @@ class ParkingListResource(Resource) :
                         left join realtime r
                         on f.prk_center_id = r.prk_center_id
                         order by {}
-                        limit {},{};'''.format(order, offset, limit)
+                        limit {},{};'''.format(latitude,longitude, order, offset, limit)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -51,7 +53,7 @@ class ParkingListResource(Resource) :
                 # 주차 요금 정보가 있으면 타입 변환
                 if result_list[i]['charge'] != None :
                     result_list[i]['charge'] = float(record['charge'])
-                    
+
                 result_list[i]['available'] = float(record['available'])
                 i = i + 1   
 
