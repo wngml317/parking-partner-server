@@ -26,7 +26,7 @@ api.add_resource(UserRegisterResource, '/users/register')
 api.add_resource(UserLoginResource, '/users/login')
 api.add_resource(UserLogoutResource, '/users/logout')
 api.add_resource(ParkingListResource, '/parking/list')
-api.add_resource(ParkingInfoResource, '/parking/<str:prk_center_id>')
+api.add_resource(ParkingInfoResource, '/parking/<string:prk_center_id>')
 
 
 if __name__ == '__main__' :
