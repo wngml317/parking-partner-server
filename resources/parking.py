@@ -99,13 +99,15 @@ class ParkingListResource(Resource) :
             # float 타입으로 변환
             i=0
             for record in result_list :
-                result_list[i]['distance'] = float(record['distance'])
+                if result_list[i]['charge'] != None :
+                    result_list[i]['distance'] = float(record['distance'])
                 
                 # 주차 요금 정보가 있으면 타입 변환
                 if result_list[i]['charge'] != None :
                     result_list[i]['charge'] = float(record['charge'])
 
-                result_list[i]['available'] = float(record['available'])
+                if result_list[i]['charge'] != None :
+                    result_list[i]['available'] = float(record['available'])
                 i = i + 1   
 
             cursor.close()
