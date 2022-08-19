@@ -1,26 +1,41 @@
-from datetime import datetime
-from http import HTTPStatus
-from os import access
+
 from flask import request
-from flask_jwt_extended import create_access_token, get_jwt, get_jwt_identity, jwt_required
 from flask_restful import Resource
 from mysql.connector.errors import Error
-from numpy import delete
 from mysql_connection import get_connection
 import mysql.connector
 
-# 주차장 
+# 현위치/목적지기반 주변 주차장 리스트 가져오는 API
 # realtime 정보가 없을 수도 있으니, 주차 총 구획 수는 facility에서 가져온다.
-class ParkingResource(Resource) :
+class ParkingListResource(Resource) :
     def get(self) :
         try :
             connection = get_connection()
+
             # 1. 클라이언트로부터 데이터를 받아온다.
+            # 현재 위치 또는 목적지 위도, 경도 데이터
             lat = request.args['lat']
             log = request.args['log']
-            
-            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo, f.prk_cmprt_co, 
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg
+            order = request.args['order']
+
+            if order == 'available' : 
+                sort = 'desc'
+            else :
+                sort = 'asc'
+
+
+            # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
+            # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
+            # 정렬 기준
+            # charge : 기본 요금 / 기본 시간 => 낮을 수록 요금 낮은 순
+            # distance : 좌표간 거리 계산 (m) 가까운 순 정렬
+            # available : 총 주차 가능 구획 수 높은 순 정렬
+            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,  
+                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
+                        f.prk_cmprt_co as available,
+                        round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
+                        -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000) as distance,
+                        o.parking_chrge_bs_chrg / o.parking_chrge_bs_time as charge
                         from facility f
                         join operation o
                         on f.prk_center_id = o.prk_center_id
@@ -28,11 +43,12 @@ class ParkingResource(Resource) :
                         on f.prk_center_id = r. prk_center_id
                         where (f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
                         and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
-                        and f.prk_cmprt_co > 30 
+                        and f.prk_cmprt_co >= 30 
                         and f.prk_plce_nm is not null 
                         and f.prk_plce_entrc_la is not null
                         and f.prk_plce_entrc_lo is not null
-                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
+                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%'
+                        order by {} {};'''.format(lat, log, lat, lat, lat, log, log, order, sort)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -45,9 +61,14 @@ class ParkingResource(Resource) :
             # float 타입으로 변환
             i=0
             for record in result_list :
-                result_list[i]['prk_plce_entrc_la'] = float(record['prk_plce_entrc_la'])
-                result_list[i]['prk_plce_entrc_lo'] = float(record['prk_plce_entrc_lo'])
+                result_list[i]['distance'] = float(record['distance'])
+                
+                # 주차 요금 정보가 있으면 타입 변환
+                if result_list[i]['charge'] != None :
+                    result_list[i]['charge'] = float(record['charge'])
 
+                if result_list[i]['available'] != None :
+                    result_list[i]['available'] = float(record['available'])
                 i = i + 1   
 
             cursor.close()
@@ -65,11 +86,11 @@ class ParkingResource(Resource) :
                 "items" : result_list}, 200
 
 
-# 하나의 주차장 정보 가져오는 API (마커 클릭 시 or 주차장 선택 시)
+# 하나의 주차장 정보 가져오는 API
 class ParkingInfoResource(Resource):
     
     def get(self,prk_center_id):
-        # 디비에서, recipe_id 에 들어있는 값에 해당되는
+        # 디비에서, prk_center_id 에 들어있는 값에 해당되는
         # 데이터를 select 해온다.
         try :
             connection = get_connection()
@@ -111,72 +132,3 @@ class ParkingInfoResource(Resource):
         return {'result' : 'success' ,
                 'info' : result_list[0]}
 
-    
-# 정렬 조건에 따라 주차장 리스트 출력
-class ParkingListResource(Resource) :
-
-    def get(self) :
-
-        # 1. 클라이언트로부터 데이터를 받아온다.
-        lat = request.args['lat']
-        log = request.args['log']
-        offset = request.args['offset']
-        limit = request.args['limit']
-        order = request.args['order']
-
-        # 2. 디비로부터 정보를 가져온다.
-        # charge : 기본 요금 / 기본 시간 => 낮을 수록 요금 낮은 순
-        # distance : 위도, 경도를 사용하여 두 점 사이 거리 구하고, 가까운 순 정렬
-        # available : 이용 불가능한 수 / 총 주차가능 구획 수 => 낮을 수록 주차 가능한 순
-        try : 
-            connection = get_connection()
-
-            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,
-                        r.pkfc_ParkingLots_total, r.pkfc_Available_ParkingLots_total,
-                        o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
-                        sqrt(pow({}-prk_plce_entrc_la, 2)+ pow({}-prk_plce_entrc_lo, 2)) as distance,
-                        o.parking_chrge_bs_chrg / o.parking_chrge_bs_time as charge,
-                        (r.pkfc_ParkingLots_total- r.pkfc_Available_ParkingLots_total) / r.pkfc_ParkingLots_total as available
-                        from facility f
-                        left join operation o
-                        on f.prk_center_id = o.prk_center_id
-                        left join realtime r
-                        on f.prk_center_id = r.prk_center_id
-                        order by {}
-                        limit {},{};'''.format(lat,log, order, offset, limit)
-
-            # select 문은 dictionary=True 를 해준다.
-            cursor = connection.cursor(dictionary = True)
-
-            cursor.execute(query, )
-
-            result_list = cursor.fetchall()
-            print(result_list)
-
-            # float 타입으로 변환
-            i=0
-            for record in result_list :
-                if result_list[i]['distance'] != None :
-                    result_list[i]['distance'] = float(record['distance'])
-                
-                # 주차 요금 정보가 있으면 타입 변환
-                if result_list[i]['charge'] != None :
-                    result_list[i]['charge'] = float(record['charge'])
-
-                if result_list[i]['available'] != None :
-                    result_list[i]['available'] = float(record['available'])
-                i = i + 1   
-
-            cursor.close()
-            connection.close()
-
-        except mysql.connector.Error as e :
-            print(e)
-            cursor.close()
-            connection.close()
-
-            return { "error" : str(e) }, 503
-
-        return { "result" : "success", 
-                "count" : len(result_list) ,
-                "items" : result_list}, 200
