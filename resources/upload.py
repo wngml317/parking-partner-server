@@ -14,10 +14,10 @@ class detectTextResource(Resource) :
         # 1. 클라이언트로부터 주차사진 데이터를 받아온다.
         # photo(file)
 
-        if 'photo' not in request.files : 
+        if 'img_prk' not in request.files : 
             return {'error' : '파일을 업로드하세요'}, 400
 
-        file = request.files['photo']
+        file = request.files['img_prk']
 
         # 2. S3에 파일 업로드
         # 파일명을 우리가 변경해준다.
@@ -64,4 +64,5 @@ class detectTextResource(Resource) :
                     print ('Parent Id: {}'.format(text['ParentId']))
                 print ('Type:' + text['Type'])
                 print()
-        return {'TextDetections' : textDetections}
+        return { 'img_prk' : new_file_name,
+            'TextDetections' : textDetections}
