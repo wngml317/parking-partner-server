@@ -91,7 +91,7 @@ class UserRegisterResource(Resource) :
             img_profile = request.files['img_profile']
             
             current_time = datetime.now()
-            new_file_name = current_time.isoformat().replace(':','_') + '.jpg'
+            new_file_name = 'U' + current_time.isoformat().replace(':','_') + '.jpg'
 
             # 유저가 올린 파일의 이름을 내가 만든 파일명으로 변경
             img_profile.filename = new_file_name
@@ -121,7 +121,7 @@ class UserRegisterResource(Resource) :
                             (email, password, name, img_profile)
                             values
                             (%s, %s , %s, %s);'''
-                record = (email, hashed_password, name, new_file_name)
+                record = (email, hashed_password, name, Config.S3_LOCATION + new_file_name)
 
                 # 3. 커서를 가져온다.
                 cursor = connection.cursor()
@@ -152,7 +152,8 @@ class UserRegisterResource(Resource) :
             access_token = create_access_token(user_id)
 
             return {'result' : 'success', 
-                    'access_token' : access_token }, 200
+                    'access_token' : access_token,
+                    'img_profile' :  Config.S3_LOCATION + new_file_name}, 200
 
 
 class UserLoginResource(Resource) :
@@ -229,7 +230,9 @@ class UserLoginResource(Resource) :
         access_token = create_access_token( user_info['id'])
 
         return {'result' : 'success', 
-                'access_token' : access_token}, 200
+                'access_token' : access_token,
+                'name' : user_info['name'],
+                'img_profile' : user_info['img_profile']}, 200
 
 
 jwt_blacklist = set()

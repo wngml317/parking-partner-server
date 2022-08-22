@@ -24,7 +24,7 @@ class DetectTextResource(Resource) :
         # 파일명을 우리가 변경해준다.
         # 파일명은 유니크하게 만들어야 한다.
         current_time = datetime.now()
-        new_file_name = current_time.isoformat().replace(':','_') + '.jpg'
+        new_file_name = 'P' + current_time.isoformat().replace(':','_') + '.jpg'
 
         # 유저가 올린 파일의 이름을 내가 만든 파일명으로 변경
         file.filename = new_file_name
@@ -65,7 +65,7 @@ class DetectTextResource(Resource) :
                     print ('Parent Id: {}'.format(text['ParentId']))
                 print ('Type:' + text['Type'])
                 print()
-        return { 'img_prk' : new_file_name,
+        return { 'img_prk' : Config.S3_LOCATION + new_file_name,
             'TextDetections' : textDetections}
 
 class ParkingCompleteResource(Resource) :
@@ -119,4 +119,5 @@ class ParkingCompleteResource(Resource) :
             connection.close()
             return {"error" : str(e)}, 503
                 
-        return {"result" : "success"}, 200
+        return {"result" : "success",
+                "img_prk" : data['img_prk']}, 200
