@@ -197,11 +197,14 @@ class ParkingEndResource(Resource) :
             lat = request.args['lat']
             log = request.args['log']
             # distance : 좌표간 거리 계산 (m) 가까운 거리
-            query = '''SELECT *,
+            query = '''SELECT f.prk_center_id,f.prk_plce_nm,f.prk_plce_adres,f.prk_plce_entrc_la,f.prk_plce_entrc_lo,f.prk_cmprt_co,f.created_at,f.upated_at,
+                        o.parking_chrge_bs_chrg,o.parking_chrge_bs_time,o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge,
 	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
 	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la))))
 	                    AS distance
-                        FROM facility
+                        FROM facility f
+                        join operation o
+                        on f.prk_center_id = o.prk_center_id
                         HAVING distance <= 1
                         ORDER BY distance 
                         LIMIT 0,1;'''.format(lat, log, lat)
