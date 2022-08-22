@@ -7,7 +7,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 
 class ParkingReviewResource(Resource) :
     
-    @jwt_required
+    @jwt_required()
     def post(self) :
 
         # 1. 클라이언트로부터 데이터를 받아온다.
@@ -20,10 +20,10 @@ class ParkingReviewResource(Resource) :
         data = request.get_json()
         user_id = get_jwt_identity()
 
-        if data['content'] == '' :
+        if 'content' not in data :
             content = ''
-        else :
-            content= data['content']
+        else : 
+            content = data['content']
 
         try : 
             connection = get_connection()
@@ -54,7 +54,7 @@ class ParkingReviewResource(Resource) :
                     values
                     (%s, %s, %s, %s);'''
 
-            record = (user_id, data['movieId'], data['rating'], content)
+            record = (user_id, data['prk_id'], data['rating'], content)
 
             cursor = connection.cursor()
 
