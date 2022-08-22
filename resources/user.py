@@ -81,7 +81,8 @@ class UserRegisterResource(Resource) :
             access_token = create_access_token(user_id)
 
             return {'result' : 'success', 
-                    'access_token' : access_token }, 200
+                    'access_token' : access_token,
+                     'img_profile' : ''}, 200
 
         else :
             # 5. 프로필 사진이 있다면 S3에 파일을 업로드 한다.
