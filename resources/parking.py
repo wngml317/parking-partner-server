@@ -187,7 +187,7 @@ class ParkingInfoResource(Resource):
 
 
   # 현 좌표 기준 가장 가까운 주차장 가져오는 api
-class ParkingListResource(Resource) :
+class ParkingEndResource(Resource) :
     def get(self) :
         try :
             connection = get_connection()
@@ -199,11 +199,6 @@ class ParkingListResource(Resource) :
 
             offset = request.args['offset']
             limit = request.args['limit']
-
-            if order == 'available' : 
-                sort = 'desc'
-            else :
-                sort = 'asc'
 
             # distance : 좌표간 거리 계산 (m) 가까운 거리
             query = '''SELECT *,
@@ -231,8 +226,8 @@ class ParkingListResource(Resource) :
 
             i=0
             for record in result_list :
-                result_list[i]['createdAt'] = record['createdAt'].isoformat()
-                result_list[i]['updatedAt'] = record['updatedAt'].isoformat()
+                result_list[i]['created_at'] = record['created_at'].isoformat()
+                result_list[i]['upated_at'] = record['upated_at'].isoformat()
                 i = i + 1    
 
             cursor.close()

@@ -2,9 +2,10 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from config import Config
-from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource
+from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource , ParkingEndResource
 from resources.upload import detectTextResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
+
 
 
 app = Flask(__name__)
@@ -30,7 +31,7 @@ api.add_resource(ParkingResource, '/parking')
 api.add_resource(ParkingListResource, '/parkingList')
 api.add_resource(ParkingInfoResource, '/parking/<string:prk_center_id>')
 api.add_resource(detectTextResource, '/upload')
-
+api.add_resource(ParkingEndResource, '/end')
 
 if __name__ == '__main__' :
     app.run()
