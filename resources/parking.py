@@ -7,6 +7,57 @@ import mysql.connector
 
 # 현위치/목적지기반 주변 주차장 리스트 가져오는 API
 # realtime 정보가 없을 수도 있으니, 주차 총 구획 수는 facility에서 가져온다.
+class ParkingResource(Resource) :
+    def get(self) :
+        try :
+            connection = get_connection()
+
+            # 1. 클라이언트로부터 데이터를 받아온다.
+            # 현재 위치 또는 목적지 위도, 경도 데이터
+            lat = request.args['lat']
+            log = request.args['log']
+
+
+            # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
+            # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
+            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo, f.prk_cmprt_co,
+                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg
+                        from facility f
+                        join operation o
+                        on f.prk_center_id = o.prk_center_id
+                        left join realtime r
+                        on f.prk_center_id = r. prk_center_id
+                        where (f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
+                        and f.prk_cmprt_co >= 30 
+                        and f.prk_plce_nm is not null 
+                        and f.prk_plce_entrc_la is not null
+                        and f.prk_plce_entrc_lo is not null
+                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
+
+            # select 문은 dictionary=True 를 해준다.
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query, )
+
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return { "result" : "success", 
+                "count" : len(result_list) ,
+                "items" : result_list}, 200
+
+# 주차장 리스트로 정렬하는 API
 class ParkingListResource(Resource) :
     def get(self) :
         try :
@@ -17,6 +68,8 @@ class ParkingListResource(Resource) :
             lat = request.args['lat']
             log = request.args['log']
             order = request.args['order']
+            offset = request.args['offset']
+            limit = request.args['limit']
 
             if order == 'available' : 
                 sort = 'desc'
@@ -48,7 +101,8 @@ class ParkingListResource(Resource) :
                         and f.prk_plce_entrc_la is not null
                         and f.prk_plce_entrc_lo is not null
                         and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%'
-                        order by {} {};'''.format(lat, log, lat, lat, lat, log, log, order, sort)
+                        order by {} {}
+                        limit {}, {};'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -84,7 +138,6 @@ class ParkingListResource(Resource) :
         return { "result" : "success", 
                 "count" : len(result_list) ,
                 "items" : result_list}, 200
-
 
 # 하나의 주차장 정보 가져오는 API
 class ParkingInfoResource(Resource):

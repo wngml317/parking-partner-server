@@ -2,7 +2,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from config import Config
-from resources.parking import ParkingListResource, ParkingInfoResource
+from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
 
 
@@ -25,7 +25,8 @@ api = Api(app)
 api.add_resource(UserRegisterResource, '/users/register')
 api.add_resource(UserLoginResource, '/users/login')
 api.add_resource(UserLogoutResource, '/users/logout')
-api.add_resource(ParkingListResource, '/parking')
+api.add_resource(ParkingResource, '/parking')
+api.add_resource(ParkingListResource, '/parkingList')
 api.add_resource(ParkingInfoResource, '/parking/<string:prk_center_id>')
 
 

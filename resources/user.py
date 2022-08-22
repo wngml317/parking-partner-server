@@ -1,98 +1,158 @@
-import datetime
-from http import HTTPStatus
+from datetime import datetime
 from flask import request
 from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 from flask_restful import Resource
 from mysql.connector.errors import Error
 from mysql_connection import get_connection
 import mysql.connector
-
 from email_validator import validate_email, EmailNotValidError
-
 from utils import check_password, hash_password
+from config import Config
+import boto3
 
 
 class UserRegisterResource(Resource) :
     def post(self) :
-        
-    #    {
-    #         "email": "abc@naver.com",
-    #         "password": "1234",
-    #         "name": "홍길동"
-    #     }
 
-        # 1. 클라이언트가 body 에 보내준 json 을 받아온다.
-        data = request.get_json()
+        # 1. 클라이언트로부터 데이터를 받아온다.
+        # email(text), password(text), name(text), img_profile(file)
+
+        email = request.form['email']
+        password = request.form['password']
+        name = request.form['name']
 
         # 2. 이메일 주소형식이 제대로 된 주소형식인지
         # 확인하는 코드 작성.
 
         try :
-            validate_email( data['email'] )
+            validate_email( email )
         except EmailNotValidError as e:
             # email is not valid, exception message is human-readable
             print(str(e))
             return {'error' : str(e)} , 400        
         
         # 3. 비밀번호의 길이가 유효한지 체크한다.
-        # 비번길이는 4자리 이상, 12자리 이하로만!
-        if len(data['password']) < 4 or len(data['password']) > 12 :
-            return {'error' : '비번길이확인하세요'}, 400
+        # 비번길이는 4자리 이상, 8자리 이하로만!
+        if len(password) < 4 or len(password) > 8 :
+            return {'error' : '비밀번호는 4자리 이상 8자리 이하로 입력'}, 400
 
         # 4. 비밀번호를 암호화 한다.
-        # data['password']
-
-        hashed_password = hash_password( data['password'] )
-
+        hashed_password = hash_password( password )
         print(hashed_password)
 
-        # 5. 데이터베이스에 회원정보를 저장한다!!
-        try :
-            # 데이터 insert 
-            # 1. DB에 연결
-            connection = get_connection()
+        if 'img_profile' not in request.files :
+            print('img_profile no')
+            # 6. 데이터베이스에 회원정보를 저장한다!!
+            try :
+                # 데이터 insert 
+                # 1. DB에 연결
+                connection = get_connection()
+                print(1)
+                query = '''insert into user
+                            (email, password, name)
+                            values
+                            (%s, %s , %s);'''
+                record = (email, hashed_password, name)
 
-            # 2. 쿼리문 만들기
-            query = '''insert into user
-                    (name, email, password)
-                    values
-                    (%s, %s , %s);'''
+                # 2. 쿼리문 만들기
+
+                # 3. 커서를 가져온다.
+                cursor = connection.cursor()
+
+                # 4. 쿼리문을 커서를 이용해서 실행한다.
+                cursor.execute(query, record)
+
+                # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
+                connection.commit()
+
+                # 5-1. 디비에 저장된 아이디값 가져오기.
+                user_id = cursor.lastrowid
+
+                # 6. 자원 해제
+                cursor.close()
+                connection.close()
+
+            except mysql.connector.Error as e :
+                print(e)
+                cursor.close()
+                connection.close()
+                return {"error" : str(e)}, 503
+
+            access_token = create_access_token(user_id)
+
+            return {'result' : 'success', 
+                    'access_token' : access_token }, 200
+
+        else :
+            # 5. 프로필 사진이 있다면 S3에 파일을 업로드 한다.
+            # 파일명을 우리가 변경해 준다.
+            # 파일명은 유니크하게 만들어야 한다.
             
-            record = (data['name'], data['email'], 
-                        hashed_password )
+            img_profile = request.files['img_profile']
+            
+            current_time = datetime.now()
+            new_file_name = current_time.isoformat().replace(':','_') + '.jpg'
 
-            # 3. 커서를 가져온다.
-            cursor = connection.cursor()
+            # 유저가 올린 파일의 이름을 내가 만든 파일명으로 변경
+            img_profile.filename = new_file_name
 
-            # 4. 쿼리문을 커서를 이용해서 실행한다.
-            cursor.execute(query, record)
+            # S3 에 업로드 하면 된다.
+            # AWS의 라이브러리를 사용해야 한다.
+            # 이 파이썬 라이브러리가 boto3 라이브러리다
+            # boto3 라이브러리 설치
+            # pip install boto3
+            s3 = boto3.client('s3', aws_access_key_id = Config.ACCESS_KEY, aws_secret_access_key = Config.SECRET_ACCESS)        
 
-            # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
-            connection.commit()
+            try :
+                s3.upload_fileobj(img_profile, Config.S3_BUCKET, img_profile.filename, 
+                                    ExtraArgs = {'ACL' : 'public-read', 'ContentType' : img_profile.content_type})
 
-            # 5-1. 디비에 저장된 아이디값 가져오기.
-            user_id = cursor.lastrowid
+            except Exception as e:
+                return {'error' : str(e)}, 500
 
-            # 6. 자원 해제
-            cursor.close()
-            connection.close()
+            # 6. 데이터베이스에 회원정보를 저장한다!!
+            try :
+                # 데이터 insert 
+                # 1. DB에 연결
+                connection = get_connection()
 
-        except mysql.connector.Error as e :
-            print(e)
-            cursor.close()
-            connection.close()
-            return {"error" : str(e)}, 503
+                # 2. 쿼리문 만들기
+                query = '''insert into user
+                            (email, password, name, img_profile)
+                            values
+                            (%s, %s , %s, %s);'''
+                record = (email, hashed_password, name, new_file_name)
 
-        # user_id 를 바로 보내면 안되고,
-        # JWT 로 암호화 해서 보내준다.
-        # 암호화 하는 방법
+                # 3. 커서를 가져온다.
+                cursor = connection.cursor()
 
-        # 억세스 토큰 만료기간 설정하는 방법
-        access_token = create_access_token(user_id, 
-                        expires_delta=datetime.timedelta(minutes=1))
+                # 4. 쿼리문을 커서를 이용해서 실행한다.
+                cursor.execute(query, record)
 
-        return {'result' : 'success', 
-                'access_token' : access_token }, 200
+                # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
+                connection.commit()
+
+                # 5-1. 디비에 저장된 아이디값 가져오기.
+                user_id = cursor.lastrowid
+
+                # 6. 자원 해제
+                cursor.close()
+                connection.close()
+
+            except mysql.connector.Error as e :
+                print(e)
+                cursor.close()
+                connection.close()
+                return {"error" : str(e)}, 503
+
+            # 7. access token을 생성해서 클라이언트에 응답해준다.
+            # user_id 를 바로 보내면 안되고,
+            # JWT 로 암호화 해서 보내준다.
+            # 암호화 하는 방법
+            access_token = create_access_token(user_id)
+
+            return {'result' : 'success', 
+                    'access_token' : access_token }, 200
 
 
 class UserLoginResource(Resource) :
