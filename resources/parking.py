@@ -196,10 +196,6 @@ class ParkingEndResource(Resource) :
             # 현재 위치 또는 목적지 위도, 경도 데이터
             lat = request.args['lat']
             log = request.args['log']
-
-            offset = request.args['offset']
-            limit = request.args['limit']
-
             # distance : 좌표간 거리 계산 (m) 가까운 거리
             query = '''SELECT *,
 	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
@@ -208,7 +204,7 @@ class ParkingEndResource(Resource) :
                         FROM facility
                         HAVING distance <= 1
                         ORDER BY distance 
-                        LIMIT {},{};'''.format(lat, log, lat, offset, limit)
+                        LIMIT 0,1;'''.format(lat, log, lat)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
