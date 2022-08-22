@@ -242,3 +242,50 @@ class ParkingEndResource(Resource) :
         return { "result" : "success", 
                 "count" : len(result_list) ,
                 "items" : result_list}, 200
+
+# 주차 위치 조회 API
+class ParkingLctResource(Resource) :
+    def get(self,user_id) :
+        try :
+            connection = get_connection()
+
+            # 1. 클라이언트로부터 데이터를 받아온다.
+            query = '''select p.user_id,p.img_prk,p.prk_plce_nm,p.prk_cmprt_co,p.start_prk_at,f.prk_plce_adres
+                        from parking p
+                        join facility f
+                        on p.prk_center_id = f.prk_center_id
+                        join user u
+                        on p.user_id = u.id
+                        where p.user_id = %s
+                        and p.start_prk_at is not null
+                        and p.end_prk is null;'''
+            
+            record = (user_id,)
+
+            # select 문은 dictionary=True 를 해준다.
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query,record)
+
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # float 타입으로 변환
+            i=0
+            for record in result_list :
+                result_list[i]['start_prk_at'] = record['start_prk_at'].isoformat()
+                i = i + 1    
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return { "result" : "success", 
+                "count" : len(result_list) ,
+                "items" : result_list}, 200
