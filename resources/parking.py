@@ -196,7 +196,7 @@ class ParkingListResource(Resource) :
             # 현재 위치 또는 목적지 위도, 경도 데이터
             lat = request.args['lat']
             log = request.args['log']
-            order = request.args['order']
+
             offset = request.args['offset']
             limit = request.args['limit']
 
@@ -205,13 +205,7 @@ class ParkingListResource(Resource) :
             else :
                 sort = 'asc'
 
-
-            # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
-            # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
-            # 정렬 기준
-            # charge : 기본 요금 / 기본 시간 => 낮을 수록 요금 낮은 순
-            # distance : 좌표간 거리 계산 (m) 가까운 순 정렬
-            # available : 총 주차 가능 구획 수 높은 순 정렬
+            # distance : 좌표간 거리 계산 (m) 가까운 거리
             query = '''SELECT *,
 	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
 	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la))))
