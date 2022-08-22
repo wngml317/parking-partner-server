@@ -245,7 +245,7 @@ class ParkingEndResource(Resource) :
 
 # 주차 위치 조회 API
 class ParkingLctResource(Resource) :
-    def get(self,id) :
+    def get(self,parking_id) :
         try :
             connection = get_connection()
 
@@ -258,7 +258,7 @@ class ParkingLctResource(Resource) :
                         and p.start_prk_at is not null
                         and p.end_prk is null;'''
             
-            record = (id,)
+            record = (parking_id,)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
