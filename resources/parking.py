@@ -245,22 +245,20 @@ class ParkingEndResource(Resource) :
 
 # 주차 위치 조회 API
 class ParkingLctResource(Resource) :
-    def get(self,user_id) :
+    def get(self,id) :
         try :
             connection = get_connection()
 
             # 1. 클라이언트로부터 데이터를 받아온다.
-            query = '''select p.user_id,p.img_prk,p.prk_plce_nm,p.prk_cmprt_co,p.start_prk_at,f.prk_plce_adres
+            query = '''select p.id,p.img_prk,p.prk_plce_nm,p.prk_cmprt_co,p.start_prk_at,f.prk_plce_adres
                         from parking p
                         join facility f
                         on p.prk_center_id = f.prk_center_id
-                        join user u
-                        on p.user_id = u.id
-                        where p.user_id = %s
+                        where p.id = %s
                         and p.start_prk_at is not null
                         and p.end_prk is null;'''
             
-            record = (user_id,)
+            record = (id,)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)

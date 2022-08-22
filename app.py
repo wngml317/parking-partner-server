@@ -33,7 +33,7 @@ api.add_resource(ParkingInfoResource, '/parking/<string:prk_center_id>')
 api.add_resource(DetectTextResource, '/upload')
 api.add_resource(ParkingCompleteResource, '/parkingComplete')
 api.add_resource(ParkingEndResource, '/end')
-api.add_resource(ParkingLctResource, '/parkLct/<int:user_id>')
+api.add_resource(ParkingLctResource, '/parkLct/<int:id>')
 
 if __name__ == '__main__' :
     app.run()
