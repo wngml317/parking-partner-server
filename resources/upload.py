@@ -67,3 +67,56 @@ class DetectTextResource(Resource) :
                 print()
         return { 'img_prk' : new_file_name,
             'TextDetections' : textDetections}
+
+class ParkingCompleteResource(Resource) :
+
+    @jwt_required()
+    def post(self) :
+
+        # 1. 클라이언트로 부터 데이터를 받아온다.
+        # {
+        #     "prk_center_id" : "22726-11291-00002-00-1",
+        #     "prk_plce_nm" : "서구청4주차장(제2청사)",
+        #     "img_prk" : "2022-08-22T12_37_25.972714.jpg",
+        #     "prk_cmprt_co" : "445"
+        # }
+        data = request.get_json()
+    
+        user_id = get_jwt_identity()
+
+        try : 
+            # 2. 주차 정보를 데이터베이스에 저장
+            # 1) DB에 연결
+            connection = get_connection()
+
+            # 2) 쿼리문 만들기
+            query = '''insert into parking 
+                        (user_id, prk_center_id, prk_plce_nm, img_prk, prk_cmprt_co)
+                        values (%s, %s, %s, %s, %s);'''
+            
+            record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_cmprt_co'])
+
+            # 3) 커서를 가져온다.
+            cursor = connection.cursor()
+
+            # 4) 쿼리문을 커서를 이용하여 실행
+            cursor.execute(query, record)
+
+            # 5) 커넥션을 커밋해준다. 
+            connection.commit()
+
+            # 5-1) 디비에 저장된 아이디값 가져오기
+            user_id = cursor.lastrowid
+
+            # 6) 자원 해제
+            cursor.close()
+            connection.close()
+
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+            return {"error" : str(e)}, 503
+                
+        return {"result" : "success"}, 200
