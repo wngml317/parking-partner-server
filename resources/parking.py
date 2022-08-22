@@ -27,10 +27,10 @@ class ParkingResource(Resource) :
                         on f.prk_center_id = o.prk_center_id
                         left join realtime r
                         on f.prk_center_id = r. prk_center_id
-                        where (f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        where (f.prk_p >= 30 
+                        and f.prk_plce_nm ilce_entrc_la between {} - 0.007 and {} + 0.007)
                         and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
-                        and f.prk_cmprt_co >= 30 
-                        and f.prk_plce_nm is not null 
+                        and f.prk_cmprt_cos not null 
                         and f.prk_plce_entrc_la is not null
                         and f.prk_plce_entrc_lo is not null
                         and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
@@ -184,4 +184,74 @@ class ParkingInfoResource(Resource):
 
         return {'result' : 'success' ,
                 'info' : result_list[0]}
+
+
+  # 현 좌표 기준 가장 가까운 주차장 가져오는 api
+class ParkingListResource(Resource) :
+    def get(self) :
+        try :
+            connection = get_connection()
+
+            # 1. 클라이언트로부터 데이터를 받아온다.
+            # 현재 위치 또는 목적지 위도, 경도 데이터
+            lat = request.args['lat']
+            log = request.args['log']
+            order = request.args['order']
+            offset = request.args['offset']
+            limit = request.args['limit']
+
+            if order == 'available' : 
+                sort = 'desc'
+            else :
+                sort = 'asc'
+
+
+            # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
+            # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
+            # 정렬 기준
+            # charge : 기본 요금 / 기본 시간 => 낮을 수록 요금 낮은 순
+            # distance : 좌표간 거리 계산 (m) 가까운 순 정렬
+            # available : 총 주차 가능 구획 수 높은 순 정렬
+            query = '''SELECT *,
+	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
+	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la))))
+	                    AS distance
+                        FROM facility
+                        HAVING distance <= 1
+                        ORDER BY distance 
+                        LIMIT {},{};'''.format(lat, log, lat, offset, limit)
+
+            # select 문은 dictionary=True 를 해준다.
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query, )
+
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # float 타입으로 변환
+            i=0
+            for record in result_list :
+                result_list[i]['distance'] = float(record['distance'])
+                i = i + 1
+
+            i=0
+            for record in result_list :
+                result_list[i]['createdAt'] = record['createdAt'].isoformat()
+                result_list[i]['updatedAt'] = record['updatedAt'].isoformat()
+                i = i + 1    
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return { "result" : "success", 
+                "count" : len(result_list) ,
+                "items" : result_list}, 200
 
