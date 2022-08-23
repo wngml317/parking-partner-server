@@ -211,6 +211,37 @@ class ParkingReviewResource(Resource) :
 
 class ParkingReviewInfoResource(Resource) :
 
+    # 하나의 리뷰 가져오는 API
+    @jwt_required()
+    def get(self, review_id) :
+
+        try :
+            connection = get_connection()
+
+            query = '''select id, prk_id, rating, content
+                        from review
+                        where id = %s;'''
+
+            record = (review_id, )
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return { "result" : "success", 
+                "count" : len(result_list) ,
+                "items" : result_list }, 200
+
     # 리뷰 수정하는 API
     @jwt_required()
     def put(self, review_id) :
