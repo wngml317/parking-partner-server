@@ -3,7 +3,7 @@ from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from config import Config
 from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource , ParkingEndResource ,ParkingLctResource
-from resources.review import ParkingReviewListResource, ParkingReviewResource
+from resources.review import ParkingReviewResource, ParkingReviewInfoResource
 from resources.parkComplete import DetectTextResource, ParkingCompleteResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
 
@@ -35,8 +35,8 @@ api.add_resource(DetectTextResource, '/upload')
 api.add_resource(ParkingCompleteResource, '/parkingComplete')
 api.add_resource(ParkingEndResource, '/end')
 api.add_resource(ParkingLctResource, '/parkLct/<int:parking_id>')
-api.add_resource(ParkingReviewListResource, '/review')
-api.add_resource(ParkingReviewResource, '/review/<int:parking_id>')
+api.add_resource(ParkingReviewResource, '/review')
+api.add_resource(ParkingReviewInfoResource, '/review/<int:review_id>')
 
 
 if __name__ == '__main__' :
