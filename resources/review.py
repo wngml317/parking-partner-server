@@ -5,14 +5,103 @@ import mysql.connector
 from mysql_connection import get_connection
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+# 리뷰 리스트 가져오는 API
+class ParkingReviewListResource(Resource) :
+
+    @jwt_required()
+    def get(self) :
+
+        order = request.args['order']
+        offset = request.args['offset']
+        limit = request.args['limit']
+
+        user_id = get_jwt_identity()
+
+        try : 
+
+            connection = get_connection()
+
+            # 리뷰 작성한 리스트만 가져오기 (write)
+            if order == 'write' :
+                query = '''select u.email, u.name, u.img_profile, p.id as prk_id, 
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
+                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            from parking p
+                            join review r
+                            on p.id = r.prk_id
+                            join user u 
+                            on p.user_id = u.id
+                            and u.id = %s
+                            order by p.start_prk_at desc
+                            limit {},{};'''.format(offset, limit)
+
+            # 리뷰 미작성한 리스트만 가져오기 (unwritten)
+            elif order == 'unwritten' :
+                query = '''select u.email, u.name, u.img_profile, p.id as prk_id, 
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
+                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            from parking p
+                            left join review r
+                            on p.id = r.prk_id 
+                            join user u 
+                            on p.user_id = u.id
+                            where end_prk is not null
+                            and r.rating is null
+                            and u.id = %s
+                            order by p.start_prk_at desc
+                            limit {},{};'''.format(offset, limit)
+
+            # 주차장 사용 이력 전체 리스트 가져오기 (total)
+            else : 
+                query = '''select u.email, u.name, u.img_profile, r.prk_id, 
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
+                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            from parking p
+                            left join review r
+                            on p.id = r.prk_id
+                            join user u 
+                            on p.user_id = u.id
+                            where end_prk is not null
+                            and u.id = %s
+                            order by p.start_prk_at desc
+                            limit {},{};'''.format(offset, limit)
+
+            record = (user_id, )
+
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query, record)
+
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            i=0
+            for record in result_list :
+                result_list[i]['start_prk_at'] = record['start_prk_at'].isoformat()
+                result_list[i]['end_prk'] = record['end_prk'].isoformat()
+                i = i + 1  
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return {"result" : "success",
+                "count" : len(result_list),
+                "items" : result_list}, 200
+
 class ParkingReviewResource(Resource) :
     
     @jwt_required()
-    def post(self) :
+    def post(self, parking_id) :
 
         # 1. 클라이언트로부터 데이터를 받아온다.
         # {
-        #     "prk_id" : 3,
         #     "rating" : 2,
         #     "content" : "좁아요."
         # }
@@ -20,19 +109,53 @@ class ParkingReviewResource(Resource) :
         data = request.get_json()
         user_id = get_jwt_identity()
 
-        if 'content' not in data :
-            content = ''
-        else : 
-            content = data['content']
-
         try : 
             connection = get_connection()
+
+            # 사용자가 이용한 주차장인지 확인
+            query = '''select * 
+                        from parking
+                        where id = %s and user_id = %s;'''
+
+            record = (parking_id, user_id)
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # 주차장을 이용한 사용자만 리뷰 작성 가능
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "이용하지 않은 주차장 리뷰는 작성할 수 없습니다."}
+
+            # 리뷰 작성을 위해 출차를 했는지 확인
+            query = '''select * 
+                        from parking
+                        where id = %s
+                        and end_prk is not null;'''
+
+            record = (parking_id, )
+            print(record)
+
+            cursor = connection.cursor(dictionary=True)
+
+            cursor.execute(query, record)
+
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # 출차 시간이 있다면 리뷰 작성 가능
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "출차 후 리뷰를 작성할 수 있습니다."}
 
             # 별점을 준 주차장인지 확인
             query = '''select * from review
                         where user_id = %s and prk_id = %s;'''
 
-            record = (user_id, data['prk_id'])
+            record = (user_id, parking_id)
             print(record)
 
             cursor = connection.cursor(dictionary=True)
@@ -49,12 +172,22 @@ class ParkingReviewResource(Resource) :
                 return {"error" : "이미 별점을 주었습니다."}
 
             # 2. 디비에 insert
-            query = '''insert into review
+            # 리뷰 내용이 없을 때 / 있을 때
+            if 'content' not in data :
+                query = '''insert into review
+                    (user_id, prk_id, rating)
+                    values
+                    (%s, %s, %s);'''
+
+                record = (user_id, parking_id, data['rating'])
+
+            else : 
+                query = '''insert into review
                     (user_id, prk_id, rating, content)
                     values
                     (%s, %s, %s, %s);'''
 
-            record = (user_id, data['prk_id'], data['rating'], content)
+                record = (user_id, parking_id, data['rating'], data['content'])
 
             cursor = connection.cursor()
 
