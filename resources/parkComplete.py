@@ -77,7 +77,7 @@ class ParkingCompleteResource(Resource) :
         # {
         #     "prk_center_id" : "22726-11291-00002-00-1",
         #     "prk_plce_nm" : "서구청4주차장(제2청사)",
-        #     "img_prk" : "2022-08-22T12_37_25.972714.jpg",
+        #     "img_prk" : "https://wngml317-image-test.s3.amazonaws.com/P2022-08-22T17_37_18.562698.jpg",
         #     "prk_cmprt_co" : "445"
         # }
         data = request.get_json()

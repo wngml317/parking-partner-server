@@ -47,14 +47,13 @@ class UserRegisterResource(Resource) :
                 # 데이터 insert 
                 # 1. DB에 연결
                 connection = get_connection()
-                print(1)
+                
+                # 2. 쿼리문 만들기
                 query = '''insert into user
                             (email, password, name)
                             values
                             (%s, %s , %s);'''
                 record = (email, hashed_password, name)
-
-                # 2. 쿼리문 만들기
 
                 # 3. 커서를 가져온다.
                 cursor = connection.cursor()

@@ -4,7 +4,7 @@ from flask_restful import Api
 from config import Config
 from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource , ParkingEndResource ,ParkingLctResource
 from resources.review import ParkingReviewResource
-from resources.upload import DetectTextResource, ParkingCompleteResource
+from resources.parkComplete import DetectTextResource, ParkingCompleteResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
 
 

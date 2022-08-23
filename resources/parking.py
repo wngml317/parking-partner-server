@@ -27,10 +27,10 @@ class ParkingResource(Resource) :
                         on f.prk_center_id = o.prk_center_id
                         left join realtime r
                         on f.prk_center_id = r. prk_center_id
-                        where (f.prk_p >= 30 
-                        and f.prk_plce_nm ilce_entrc_la between {} - 0.007 and {} + 0.007)
-                        and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
-                        and f.prk_cmprt_cos not null 
+                        where f.prk_cmprt_co >= 30 
+                        and f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007
+                        and f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007
+                        and f.prk_plce_nm is not null 
                         and f.prk_plce_entrc_la is not null
                         and f.prk_plce_entrc_lo is not null
                         and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
@@ -186,7 +186,7 @@ class ParkingInfoResource(Resource):
                 'info' : result_list[0]}
 
 
-  # 현 좌표 기준 가장 가까운 주차장 가져오는 api
+# 현 좌표 기준 가장 가까운 주차장 가져오는 api
 class ParkingEndResource(Resource) :
     def get(self) :
         try :
