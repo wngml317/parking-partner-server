@@ -6,6 +6,7 @@ from resources.parking import ParkingResource, ParkingListResource, ParkingInfoR
 from resources.review import ParkingReviewResource, ParkingReviewInfoResource
 from resources.parkComplete import DetectTextResource, ParkingCompleteResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
+from resources.endparking import ParkingPayResource
 
 
 
@@ -26,7 +27,7 @@ def check_if_token_is_revoked(jwt_header, jwt_payload):
 api = Api(app)
 
 api.add_resource(UserRegisterResource, '/users/register')
-api.add_resource(UserLoginResource, '/users/login')
+api.add_resource(UserLoginResource, '/userss/login')
 api.add_resource(UserLogoutResource, '/users/logout')
 api.add_resource(ParkingResource, '/parking')
 api.add_resource(ParkingListResource, '/parkingList')
@@ -37,6 +38,7 @@ api.add_resource(ParkingEndResource, '/end')
 api.add_resource(ParkingLctResource, '/parkLct/<int:parking_id>')
 api.add_resource(ParkingReviewResource, '/review')
 api.add_resource(ParkingReviewInfoResource, '/review/<int:review_id>')
+api.add_resource(ParkingPayResource,'/parkingend/<int:parking_id>')
 
 
 if __name__ == '__main__' :
