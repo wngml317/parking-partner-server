@@ -55,18 +55,24 @@ class DetectTextResource(Resource) :
                                             'MinConfidence': 98
                                             }})
 
+        con_list = []
         textDetections=response['TextDetections']
         print ('Detected text\n----------')
         for text in textDetections:
                 print ('Detected text:' + text['DetectedText'])
                 print ('Confidence: ' + "{:.2f}".format(text['Confidence']) + "%")
-                # print ('Id: {}'.format(text['Id']))
-                # if 'ParentId' in text:
-                #     print ('Parent Id: {}'.format(text['ParentId']))
-                # print ('Type:' + text['Type'])
+                print ('Id: {}'.format(text['Id']))
+                if 'ParentId' in text:
+                    print ('Parent Id: {}'.format(text['ParentId']))
+                print ('Type:' + text['Type'])
+                con_list.append(text['Confidence'])
                 print()
+                
+        index = con_list.index(max(con_list))
+    
         return { 'img_prk' : Config.S3_LOCATION + new_file_name,
-            'TextDetections' : textDetections}
+            'DetectedText' : textDetections[index].get('DetectedText'),
+            'Confidence' : textDetections[index].get('Confidence')}
 
 class ParkingCompleteResource(Resource) :
 
