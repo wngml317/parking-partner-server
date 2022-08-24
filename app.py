@@ -6,7 +6,7 @@ from resources.parking import ParkingResource, ParkingListResource, ParkingInfoR
 from resources.review import ParkingReviewResource, ParkingReviewInfoResource
 from resources.parkComplete import DetectTextResource, ParkingCompleteResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
-from resources.endparking import ParkingPayResource
+from resources.endParking import ParkingPayResource
 
 
 
