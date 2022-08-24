@@ -2,6 +2,7 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from config import Config
+from facility import Facility
 from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource , ParkingEndResource ,ParkingLctResource
 from resources.review import ParkingReviewResource, ParkingReviewInfoResource
 from resources.parkComplete import DetectTextResource, ParkingCompleteResource
@@ -39,6 +40,8 @@ api.add_resource(ParkingLctResource, '/parkLct/<int:parking_id>')
 api.add_resource(ParkingReviewResource, '/review')
 api.add_resource(ParkingReviewInfoResource, '/review/<int:review_id>')
 api.add_resource(ParkingPayResource,'/parkingend/<int:parking_id>')
+
+api.add_resource(Facility, '/facility')
 
 
 if __name__ == '__main__' :

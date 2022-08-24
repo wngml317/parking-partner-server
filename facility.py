@@ -61,7 +61,7 @@ class Facility(Resource) :
         
         count = 2
 
-        while count < 200 :
+        while count < 3 :
             df2 = pd.DataFrame(columns=['prk_center_id', 'prk_plce_nm', 'prk_plce_adres', 'prk_plce_entrc_la', 'prk_plce_entrc_lo', 'prk_cmprt_co'])
 
             url = 'http://apis.data.go.kr/B553881/Parking/PrkSttusInfo'
