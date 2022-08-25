@@ -97,7 +97,7 @@ class ParkingCompleteResource(Resource) :
 
             # 2) 쿼리문 만들기
             query = '''insert into parking 
-                        (user_id, prk_center_id, prk_plce_nm, img_prk, prk_cmprt_co)
+                        (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area)
                         values (%s, %s, %s, %s, %s);'''
             
             record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_cmprt_co'])

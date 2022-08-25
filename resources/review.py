@@ -137,8 +137,8 @@ class ParkingReviewResource(Resource) :
             # 리뷰 작성한 리스트만 가져오기 (write)
             if order == 'write' :
                 query = '''select r.id, u.email, u.name, u.img_profile, p.id as prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
-                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                            p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             join review r
                             on p.id = r.prk_id
@@ -151,8 +151,8 @@ class ParkingReviewResource(Resource) :
             # 리뷰 미작성한 리스트만 가져오기 (unwritten)
             elif order == 'unwritten' :
                 query = '''select u.email, u.name, u.img_profile, p.id as prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
-                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                            p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
                             on p.id = r.prk_id 
@@ -167,8 +167,8 @@ class ParkingReviewResource(Resource) :
             # 주차장 사용 이력 전체 리스트 가져오기 (total)
             else : 
                 query = '''select r.id, u.email, u.name, u.img_profile, r.prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk, p.use_prk_at,
-                            p.img_prk, p.prk_cmprt_co, p.use_prk_at, p.end_pay, r.rating, r.content
+                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                            p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
                             on p.id = r.prk_id

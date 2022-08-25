@@ -248,7 +248,7 @@ class ParkingLctResource(Resource) :
             connection = get_connection()
 
             # 1. 클라이언트로부터 데이터를 받아온다.
-            query = '''select p.id,p.img_prk,p.prk_plce_nm,p.prk_cmprt_co,p.start_prk_at,f.prk_plce_adres
+            query = '''select p.id,p.img_prk,p.prk_plce_nm,p.prk_area,p.start_prk_at,f.prk_plce_adres
                         from parking p
                         join facility f
                         on p.prk_center_id = f.prk_center_id

@@ -17,7 +17,7 @@ class ParkingPayResource(Resource) :
         try :
             connection = get_connection()
 
-            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_cmprt_co,timediff(now(),p.start_prk_at) AS use_prk_at,
+            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_area,timediff(now(),p.start_prk_at) AS use_prk_at,
                         (
                         case
                             when (timediff(now(), p.start_prk_at) <= o.parking_chrge_bs_chrg) or (o.parking_chrge_adit_unit_chrge = 0) then o.parking_chrge_bs_chrg
@@ -70,7 +70,7 @@ class ParkingPayResource(Resource) :
                 "items" : result_list }, 200
 
 
-
+ # 출차하기(업데이트) API
     def put(self, parking_id) :
         # 디비 업데이트 실행코드
         try :
