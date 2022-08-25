@@ -192,6 +192,7 @@ class ParkingReviewResource(Resource) :
             for record in result_list :
                 result_list[i]['start_prk_at'] = record['start_prk_at'].isoformat()
                 result_list[i]['end_prk'] = record['end_prk'].isoformat()
+                result_list[i]['use_prk_at'] = record['use_prk_at'].__str__()
                 i = i + 1  
 
             cursor.close()
