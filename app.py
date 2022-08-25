@@ -28,7 +28,7 @@ def check_if_token_is_revoked(jwt_header, jwt_payload):
 api = Api(app)
 
 api.add_resource(UserRegisterResource, '/users/register')
-api.add_resource(UserLoginResource, '/userss/login')
+api.add_resource(UserLoginResource, '/users/login')
 api.add_resource(UserLogoutResource, '/users/logout')
 api.add_resource(ParkingResource, '/parking')
 api.add_resource(ParkingListResource, '/parkingList')

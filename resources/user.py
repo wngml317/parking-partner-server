@@ -40,6 +40,8 @@ class UserRegisterResource(Resource) :
         hashed_password = hash_password( password )
         print(hashed_password)
 
+
+        # 5-1. 프로필 사진이 없을 때
         if 'img_profile' not in request.files :
             print('img_profile no')
             # 6. 데이터베이스에 회원정보를 저장한다!!
@@ -84,7 +86,8 @@ class UserRegisterResource(Resource) :
                      'img_profile' : ''}, 200
 
         else :
-            # 5. 프로필 사진이 있다면 S3에 파일을 업로드 한다.
+            # 5-2. 프로필 사진이 있을 때
+            # S3에 파일을 업로드 한다.
             # 파일명을 우리가 변경해 준다.
             # 파일명은 유니크하게 만들어야 한다.
             
