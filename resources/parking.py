@@ -4,6 +4,7 @@ from flask_restful import Resource
 from mysql.connector.errors import Error
 from mysql_connection import get_connection
 import mysql.connector
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 # 현위치/목적지기반 주변 주차장 리스트 가져오는 API
 # realtime 정보가 없을 수도 있으니, 주차 총 구획 수는 facility에서 가져온다.
