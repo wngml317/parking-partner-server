@@ -139,9 +139,9 @@ class ParkingListResource(Resource) :
                 if result_list[i]['charge'] != None :
                     result_list[i]['charge'] = float(record['charge'])
 
-                # 주차 요금 정보가 있으면 타입 변환
-                if result_list[i]['charge'] != None :
-                    result_list[i]['charge'] = float(record['charge'])
+                # 별점 정보가 있으면 타입 변환
+                if result_list[i]['rating'] != None :
+                    result_list[i]['rating'] = float(record['rating'])
 
                 i = i + 1   
 
