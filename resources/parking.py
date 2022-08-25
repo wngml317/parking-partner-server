@@ -85,7 +85,7 @@ class ParkingListResource(Resource) :
             query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,  
                         r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
                         o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge,
-                        f.prk_cmprt_co as available,
+                        if(r.pkfc_Available_ParkingLots_total is null, f.prk_cmprt_co, f.prk_cmprt_co - r.pkfc_Available_ParkingLots_total) as available,
                         round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
                         -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000) as distance,
                         o.parking_chrge_bs_chrg / o.parking_chrge_bs_time as charge
@@ -119,8 +119,6 @@ class ParkingListResource(Resource) :
                 if result_list[i]['charge'] != None :
                     result_list[i]['charge'] = float(record['charge'])
 
-                if result_list[i]['available'] != None :
-                    result_list[i]['available'] = float(record['available'])
                 i = i + 1   
 
             cursor.close()
@@ -147,7 +145,8 @@ class ParkingInfoResource(Resource):
             connection = get_connection()
 
             query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo, f.prk_cmprt_co, 
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg
+                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
+                        o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge
                         from facility f
                         join operation o
                         on f.prk_center_id = o.prk_center_id
