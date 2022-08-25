@@ -195,7 +195,7 @@ class ParkingEndResource(Resource) :
             log = request.args['log']
             # distance : 좌표간 거리 계산 (m) 가까운 거리
             query = '''SELECT f.prk_center_id,f.prk_plce_nm,f.prk_plce_adres,f.prk_plce_entrc_la,f.prk_plce_entrc_lo,f.prk_cmprt_co,f.created_at,f.updated_at,
-                        o.parking_chrge_bs_chrg,o.parking_chrge_bs_time,o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge,
+                        o.parking_chrge_bs_chrg,o.parking_chrge_bs_time,o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge,
 	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
 	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la))))
 	                    AS distance
@@ -264,6 +264,11 @@ class ParkingLctResource(Resource) :
 
             result_list = cursor.fetchall()
             print(result_list)
+
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "이미 출차하였습니다."}
 
             # float 타입으로 변환
             i=0
