@@ -50,7 +50,7 @@ class ParkingResource(Resource) :
 
             i=0
             for record in result_list :
-                
+
                 # 별점 정보가 있으면 타입 변환
                 if result_list[i]['rating'] != None :
                     result_list[i]['rating'] = float(record['rating'])
@@ -97,23 +97,28 @@ class ParkingListResource(Resource) :
             # charge : 기본 요금 / 기본 시간 => 낮을 수록 요금 낮은 순
             # distance : 좌표간 거리 계산 (m) 가까운 순 정렬
             # available : 총 주차 가능 구획 수 높은 순 정렬
-            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,  
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
-                        o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge,
-                        if(r.pkfc_Available_ParkingLots_total is null, f.prk_cmprt_co, f.prk_cmprt_co - r.pkfc_Available_ParkingLots_total) as available,
-                        round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
-                        -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000) as distance,
-                        o.parking_chrge_bs_chrg / o.parking_chrge_bs_time as charge
-                        from facility f
-                        join operation o
-                        on f.prk_center_id = o.prk_center_id
-                        left join realtime r
-                        on f.prk_center_id = r. prk_center_id
-                        where (f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
-                        and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
-                        and f.prk_cmprt_co >= 30 
-                        and f.prk_plce_nm is not null 
-                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%'
+            query = '''select a.prk_center_id, a.prk_plce_nm, a.prk_plce_adres, a.prk_plce_entrc_la, a.prk_plce_entrc_lo, a.prk_cmprt_co, 
+                        c.pkfc_Available_ParkingLots_total, b.parking_chrge_bs_time, b.parking_chrge_bs_chrg, 
+                        b.parking_chrge_adit_unit_time, b.parking_chrge_adit_unit_chrge, b.parking_chrge_one_day_chrge,
+                        round(avg(e.rating),2) as rating,
+                        if(c.pkfc_Available_ParkingLots_total is null, a.prk_cmprt_co, a.prk_cmprt_co - c.pkfc_Available_ParkingLots_total) as available,
+                        round(6371*acos(cos(radians({}))*cos(radians(a.prk_plce_entrc_la))*cos(radians(a.prk_plce_entrc_lo)
+                        -radians({}))+sin(radians({}))*sin(radians(a.prk_plce_entrc_la)))*1000) as distance,
+                        b.parking_chrge_bs_chrg / b.parking_chrge_bs_time as charge
+                        from facility a
+                        join operation b
+                        on a.prk_center_id = b.prk_center_id
+                        left join realtime c
+                        on a.prk_center_id = c. prk_center_id
+                        left join parking d 
+                        on a.prk_center_id = d.prk_center_id
+                        left join review e 
+                        on d.id = e.prk_id
+                        group by a.prk_center_id
+                        having (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        and (a.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
+                        and a.prk_cmprt_co >= 30 
+                        and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
                         order by {} {}
                         limit {}, {};'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
 
@@ -130,6 +135,10 @@ class ParkingListResource(Resource) :
             for record in result_list :
                 result_list[i]['distance'] = float(record['distance'])
                 
+                # 주차 요금 정보가 있으면 타입 변환
+                if result_list[i]['charge'] != None :
+                    result_list[i]['charge'] = float(record['charge'])
+
                 # 주차 요금 정보가 있으면 타입 변환
                 if result_list[i]['charge'] != None :
                     result_list[i]['charge'] = float(record['charge'])
@@ -257,20 +266,40 @@ class ParkingEndResource(Resource) :
 
 # 주차 위치 조회 API
 class ParkingLctResource(Resource) :
+    @jwt_required()
     def get(self,parking_id) :
         try :
             connection = get_connection()
+
+            user_id = get_jwt_identity()
+
+            query = '''select id, img_prk, prk_plce_nm, prk_area, start_prk_at
+                        from parking
+                        where id = %s and user_id = %s; '''
+
+            record = (parking_id, user_id)
+
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # 주차장 정보를 저장하지 않은 사용자는 위치 조회 불가능
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "위치를 조회할 권한이 없습니다."}
 
             # 1. 클라이언트로부터 데이터를 받아온다.
             query = '''select p.id,p.img_prk,p.prk_plce_nm,p.prk_area,p.start_prk_at,f.prk_plce_adres
                         from parking p
                         join facility f
                         on p.prk_center_id = f.prk_center_id
-                        where p.id = %s
+                        where p.id = %s and p.user_id = %s
                         and p.start_prk_at is not null
                         and p.end_prk is null;'''
             
-            record = (parking_id,)
+            record = (parking_id, user_id)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
