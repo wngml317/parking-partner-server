@@ -78,6 +78,25 @@ class ParkingPayResource(Resource) :
             # 1. DB에 연결
             connection = get_connection()
 
+
+            query = '''select *
+                        from parking
+                        where id = %s and end_prk is not null; '''
+
+            record = (parking_id,)
+
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+            print(result_list)
+
+            # 출차한 데이터는 다시 출차할수 없음
+            if len(result_list) != 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "출차 처리가 완료된 차량 입니다."}
+
+
              # 2. 쿼리문 만들기
             query = '''update parking p 
                         join operation o
@@ -85,7 +104,7 @@ class ParkingPayResource(Resource) :
                         set use_prk_at = timediff(now(),p.start_prk_at) , end_pay = if ( hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) <= o.parking_chrge_bs_time, o.parking_chrge_bs_chrg, if(o.parking_chrge_adit_unit_time = 0, o.parking_chrge_bs_chrg,
                         (round((hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time) * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg ))
                         ,end_prk = now()
-                        where id = %s and end_prk is null;'''
+                        where id = %s;'''
                 
             record = (parking_id ,)
 
