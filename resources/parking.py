@@ -21,19 +21,24 @@ class ParkingResource(Resource) :
 
             # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
             # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
-            query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo, f.prk_cmprt_co,
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
-                        o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge
-                        from facility f
-                        join operation o
-                        on f.prk_center_id = o.prk_center_id
-                        left join realtime r
-                        on f.prk_center_id = r. prk_center_id
-                        where f.prk_cmprt_co >= 30 
-                        and f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007
-                        and f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007
-                        and f.prk_plce_nm is not null 
-                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
+            query = '''select a.prk_center_id, a.prk_plce_nm, a.prk_plce_adres, a.prk_plce_entrc_la, a.prk_plce_entrc_lo, a.prk_cmprt_co, 
+                        c.pkfc_Available_ParkingLots_total, b.parking_chrge_bs_time, b.parking_chrge_bs_chrg, 
+                        b.parking_chrge_adit_unit_time, b.parking_chrge_adit_unit_chrge, b.parking_chrge_one_day_chrge,
+                        round(avg(e.rating),2) as rating
+                        from facility a
+                        join operation b
+                        on a.prk_center_id = b.prk_center_id
+                        left join realtime c
+                        on a.prk_center_id = c. prk_center_id
+                        left join parking d 
+                        on a.prk_center_id = d.prk_center_id
+                        left join review e 
+                        on d.id = e.prk_id
+                        group by a.prk_center_id
+                        having (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        and (a.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
+                        and a.prk_cmprt_co >= 30 
+                        and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -42,6 +47,15 @@ class ParkingResource(Resource) :
 
             result_list = cursor.fetchall()
             print(result_list)
+
+            i=0
+            for record in result_list :
+                
+                # 별점 정보가 있으면 타입 변환
+                if result_list[i]['rating'] != None :
+                    result_list[i]['rating'] = float(record['rating'])
+            
+                i = i + 1   
 
             cursor.close()
             connection.close()
