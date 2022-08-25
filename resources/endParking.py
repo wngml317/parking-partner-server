@@ -17,14 +17,25 @@ class ParkingPayResource(Resource) :
         try :
             connection = get_connection()
 
-            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_cmprt_co,timediff(now(),p.start_prk_at) AS use_prk_at, o.parking_chrge_bs_time,
-                        hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) as total_use_park_at,o.parking_chrge_one_day_chrge,
-                        if ( hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) <= o.parking_chrge_bs_time, o.parking_chrge_bs_chrg, if(o.parking_chrge_adit_unit_time = 0, o.parking_chrge_bs_chrg,
-                        (round((hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time) * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg )) as end_pay
+            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_cmprt_co,timediff(now(),p.start_prk_at) AS use_prk_at,o.parking_chrge_one_day_chrge,
+                        (
+                        case
+                            when (timediff(now(), p.start_prk_at) <= o.parking_chrge_bs_chrg) or (o.parking_chrge_adit_unit_chrge = 0) then o.parking_chrge_bs_chrg
+                            when (ceil((hour(timediff(now(), p.start_prk_at))*60 + minute(timediff(now(), p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time)
+                            * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg < o.parking_chrge_one_day_chrge
+                            then (ceil((hour(timediff(now(), p.start_prk_at))*60 + minute(timediff(now(), p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time)
+                            * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg
+                            when hour(timediff(now(), p.start_prk_at)) < 24 and (ceil((hour(timediff(now(), p.start_prk_at))*60 + minute(timediff(now(), p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time)
+                            * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg > o.parking_chrge_one_day_chrge then o.parking_chrge_one_day_chrge
+                            else ( truncate(hour(timediff(now(), p.start_prk_at)) / 24, 0) * o.parking_chrge_one_day_chrge )
+                            + ceil(((hour(timediff(now(), p.start_prk_at)) - ( 24 * (truncate(hour(timediff(now(), p.start_prk_at)) / 24, 0)))) * 60 + minute(timediff(now(), p.start_prk_at))) / o.parking_chrge_adit_unit_time ) *o.parking_chrge_adit_unit_chrge
+                        end
+                        ) as end_pay
                         from parking p
                         join operation o
                         on p.prk_center_id = o.prk_center_id
-                        where p.id = %s ;'''
+                        where id = %s;
+                        '''
 
             record = (parking_id, )
             cursor = connection.cursor(dictionary=True)
