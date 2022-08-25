@@ -17,7 +17,7 @@ class ParkingPayResource(Resource) :
         try :
             connection = get_connection()
 
-            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_cmprt_co,timediff(now(),p.start_prk_at) AS use_prk_at,o.parking_chrge_one_day_chrge,
+            query = '''select p.id,p.prk_plce_nm,p.start_prk_at,p.prk_cmprt_co,timediff(now(),p.start_prk_at) AS use_prk_at,
                         (
                         case
                             when (timediff(now(), p.start_prk_at) <= o.parking_chrge_bs_chrg) or (o.parking_chrge_adit_unit_chrge = 0) then o.parking_chrge_bs_chrg
@@ -34,7 +34,7 @@ class ParkingPayResource(Resource) :
                         from parking p
                         join operation o
                         on p.prk_center_id = o.prk_center_id
-                        where id = %s;
+                        where id = %s and end_prk is null;
                         '''
 
             record = (parking_id, )
@@ -42,6 +42,11 @@ class ParkingPayResource(Resource) :
             cursor.execute(query, record)
             result_list = cursor.fetchall()
             print(result_list)
+
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "출차한 차량은 요금을 계산할 수 없습니다."}
 
             i=0
             for record in result_list :
