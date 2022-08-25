@@ -31,8 +31,6 @@ class ParkingResource(Resource) :
                         and f.prk_plce_entrc_la between {} - 0.007 and {} + 0.007
                         and f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007
                         and f.prk_plce_nm is not null 
-                        and f.prk_plce_entrc_la is not null
-                        and f.prk_plce_entrc_lo is not null
                         and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
 
             # select 문은 dictionary=True 를 해준다.
@@ -84,7 +82,7 @@ class ParkingListResource(Resource) :
             # distance : 좌표간 거리 계산 (m) 가까운 순 정렬
             # available : 총 주차 가능 구획 수 높은 순 정렬
             query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,  
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg
+                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
                         f.prk_cmprt_co as available,
                         round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
                         -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000) as distance,
@@ -98,8 +96,6 @@ class ParkingListResource(Resource) :
                         and (f.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
                         and f.prk_cmprt_co >= 30 
                         and f.prk_plce_nm is not null 
-                        and f.prk_plce_entrc_la is not null
-                        and f.prk_plce_entrc_lo is not null
                         and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%'
                         order by {} {}
                         limit {}, {};'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
