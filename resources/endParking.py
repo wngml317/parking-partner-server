@@ -85,7 +85,7 @@ class ParkingPayResource(Resource) :
                         set use_prk_at = timediff(now(),p.start_prk_at) , end_pay = if ( hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) <= o.parking_chrge_bs_time, o.parking_chrge_bs_chrg, if(o.parking_chrge_adit_unit_time = 0, o.parking_chrge_bs_chrg,
                         (round((hour(timediff(now(),p.start_prk_at))*60 + minute(timediff(now(),p.start_prk_at)) - o.parking_chrge_bs_time) / o.parking_chrge_adit_unit_time) * o.parking_chrge_adit_unit_chrge) + o.parking_chrge_bs_chrg ))
                         ,end_prk = now()
-                        where id = %s;'''
+                        where id = %s and end_prk is null;'''
                 
             record = (parking_id ,)
 
@@ -94,6 +94,7 @@ class ParkingPayResource(Resource) :
 
             # 4. 쿼리문을 커서를 이용해서 실행한다.
             cursor.execute(query, record)
+            
 
             # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
             connection.commit()
