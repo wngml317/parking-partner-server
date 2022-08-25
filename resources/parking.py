@@ -21,7 +21,8 @@ class ParkingResource(Resource) :
             # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
             # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
             query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo, f.prk_cmprt_co,
-                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg
+                        r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
+                        o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge
                         from facility f
                         join operation o
                         on f.prk_center_id = o.prk_center_id
@@ -83,6 +84,7 @@ class ParkingListResource(Resource) :
             # available : 총 주차 가능 구획 수 높은 순 정렬
             query = '''select f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, f.prk_plce_entrc_la, f.prk_plce_entrc_lo,  
                         r.pkfc_Available_ParkingLots_total, o.parking_chrge_bs_time, o.parking_chrge_bs_chrg,
+                        o.parking_chrge_adit_unit_time, o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge,
                         f.prk_cmprt_co as available,
                         round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
                         -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000) as distance,
