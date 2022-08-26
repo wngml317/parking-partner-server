@@ -136,46 +136,43 @@ class ParkingReviewResource(Resource) :
 
             # 리뷰 작성한 리스트만 가져오기 (write)
             if order == 'write' :
-                query = '''select r.id, u.email, u.name, u.img_profile, p.id as prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
-                            join review r
-                            on p.id = r.prk_id
-                            join user u 
-                            on p.user_id = u.id
-                            and u.id = %s
+                            left join review r
+                            on p.id = r.prk_id 
+                            join facility f
+                            on p.prk_center_id = f.prk_center_id
+                            and p.user_id = %s
                             order by p.start_prk_at desc
                             limit {},{};'''.format(offset, limit)
 
             # 리뷰 미작성한 리스트만 가져오기 (unwritten)
             elif order == 'unwritten' :
-                query = '''select u.email, u.name, u.img_profile, p.id as prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
                             on p.id = r.prk_id 
-                            join user u 
-                            on p.user_id = u.id
+                            join facility f
+                            on p.prk_center_id = f.prk_center_id
                             where end_prk is not null
                             and r.rating is null
-                            and u.id = %s
+                            and p.user_id = %s
                             order by p.start_prk_at desc
                             limit {},{};'''.format(offset, limit)
 
             # 주차장 사용 이력 전체 리스트 가져오기 (total)
             else : 
-                query = '''select r.id, u.email, u.name, u.img_profile, r.prk_id, 
-                            p.prk_center_id, p.prk_plce_nm, p.start_prk_at, p.end_prk,
+                query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
-                            on p.id = r.prk_id
-                            join user u 
-                            on p.user_id = u.id
+                            on p.id = r.prk_id 
+                            join facility f
+                            on p.prk_center_id = f.prk_center_id
                             where end_prk is not null
-                            and u.id = %s
+                            and p.user_id = %s
                             order by p.start_prk_at desc
                             limit {},{};'''.format(offset, limit)
 
