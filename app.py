@@ -15,6 +15,7 @@ app = Flask(__name__)
 
 # 환경변수 셋팅
 app.config.from_object(Config)
+app.config['TIMEOUT'] = 60 #second
 
 # JWT 토큰 라이브러리 만들기
 jwt = JWTManager(app)
