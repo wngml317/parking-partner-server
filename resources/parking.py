@@ -34,11 +34,11 @@ class ParkingResource(Resource) :
                         on a.prk_center_id = d.prk_center_id
                         left join review e 
                         on d.id = e.prk_id
-                        group by a.prk_center_id
-                        having (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        where (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
                         and (a.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
                         and a.prk_cmprt_co >= 30 
-                        and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%';'''.format(lat, lat, log, log)
+                        and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
+                        group by a.prk_center_id;'''.format(lat, lat, log, log)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -114,13 +114,14 @@ class ParkingListResource(Resource) :
                         on a.prk_center_id = d.prk_center_id
                         left join review e 
                         on d.id = e.prk_id
-                        group by a.prk_center_id
-                        having (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
+                        where (a.prk_plce_entrc_la between {} - 0.007 and {} + 0.007)
                         and (a.prk_plce_entrc_lo between {} - 0.007 and {} + 0.007)
                         and a.prk_cmprt_co >= 30 
                         and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
+                        group by a.prk_center_id
                         order by {} {}
-                        limit {}, {};'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
+                        limit {}, {}
+                        ;'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
