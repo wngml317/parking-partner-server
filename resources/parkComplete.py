@@ -99,12 +99,20 @@ class ParkingCompleteResource(Resource) :
             # 1) DB에 연결
             connection = get_connection()
 
-            # 2) 쿼리문 만들기
-            query = '''insert into parking 
-                        (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area)
-                        values (%s, %s, %s, %s, %s);'''
+            if 'prk_area' not in data :
+                query = '''insert into parking 
+                        (user_id, prk_center_id, prk_plce_nm, img_prk)
+                        values (%s, %s, %s, %s);'''
             
-            record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'])
+                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'])
+
+            else : 
+                # 2) 쿼리문 만들기
+                query = '''insert into parking 
+                            (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area)
+                            values (%s, %s, %s, %s, %s);'''
+                
+                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'])
 
             # 3) 커서를 가져온다.
             cursor = connection.cursor()
@@ -116,7 +124,7 @@ class ParkingCompleteResource(Resource) :
             connection.commit()
 
             # 5-1) 디비에 저장된 아이디값 가져오기
-            user_id = cursor.lastrowid
+            prk_id = cursor.lastrowid
 
             # 6) 자원 해제
             cursor.close()
@@ -130,4 +138,4 @@ class ParkingCompleteResource(Resource) :
             return {"error" : str(e)}, 503
                 
         return {"result" : "success",
-                "img_prk" : data['img_prk']}, 200
+                "prk_id" : prk_id}, 200
