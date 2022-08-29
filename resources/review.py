@@ -129,6 +129,7 @@ class ParkingReviewResource(Resource) :
         limit = request.args['limit']
 
         user_id = get_jwt_identity()
+        rating = []
 
         try : 
 
@@ -204,7 +205,6 @@ class ParkingReviewResource(Resource) :
 
         return {"result" : "success",
                 "count" : len(result_list),
-                "sort" : order,
                 "items" : result_list}, 200
 
 class ParkingReviewInfoResource(Resource) :

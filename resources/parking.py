@@ -104,7 +104,7 @@ class ParkingListResource(Resource) :
                         if(c.pkfc_Available_ParkingLots_total is null, a.prk_cmprt_co, a.prk_cmprt_co - c.pkfc_Available_ParkingLots_total) as available,
                         round(6371*acos(cos(radians({}))*cos(radians(a.prk_plce_entrc_la))*cos(radians(a.prk_plce_entrc_lo)
                         -radians({}))+sin(radians({}))*sin(radians(a.prk_plce_entrc_la)))*1000) as distance,
-                        b.parking_chrge_bs_chrg / b.parking_chrge_bs_time as charge
+                        floor(b.parking_chrge_bs_chrg / b.parking_chrge_bs_time) as charge
                         from facility a
                         join operation b
                         on a.prk_center_id = b.prk_center_id
@@ -135,10 +135,6 @@ class ParkingListResource(Resource) :
             i=0
             for record in result_list :
                 result_list[i]['distance'] = float(record['distance'])
-                
-                # 주차 요금 정보가 있으면 타입 변환
-                if result_list[i]['charge'] != None :
-                    result_list[i]['charge'] = float(record['charge'])
 
                 # 별점 정보가 있으면 타입 변환
                 if result_list[i]['rating'] != None :
@@ -221,13 +217,12 @@ class ParkingEndResource(Resource) :
             # distance : 좌표간 거리 계산 (m) 가까운 거리
             query = '''SELECT f.prk_center_id,f.prk_plce_nm,f.prk_plce_adres,f.prk_plce_entrc_la,f.prk_plce_entrc_lo,f.prk_cmprt_co,f.created_at,f.updated_at,
                         o.parking_chrge_bs_chrg,o.parking_chrge_bs_time,o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge, o.parking_chrge_one_day_chrge,
-	                    (6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
-	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la))))
+	                    round(6371*acos(cos(radians({}))*cos(radians(prk_plce_entrc_la))*cos(radians(prk_plce_entrc_lo)
+	                    -radians({}))+sin(radians({}))*sin(radians(prk_plce_entrc_la)))*1000)
 	                    AS distance
                         FROM facility f
                         join operation o
                         on f.prk_center_id = o.prk_center_id
-                        HAVING distance <= 1
                         ORDER BY distance 
                         LIMIT 0,1;'''.format(lat, log, lat)
 
