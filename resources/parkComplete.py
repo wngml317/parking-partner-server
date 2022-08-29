@@ -70,7 +70,8 @@ class DetectTextResource(Resource) :
                 
         index = con_list.index(max(con_list))
     
-        return { 'img_prk' : Config.S3_LOCATION + new_file_name,
+        return { 'result' : 'success',
+            'img_prk' : Config.S3_LOCATION + new_file_name,
             'DetectedText' : textDetections[index].get('DetectedText'),
             'Confidence' : textDetections[index].get('Confidence')}
 

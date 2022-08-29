@@ -145,6 +145,8 @@ class ParkingReviewResource(Resource) :
                             join facility f
                             on p.prk_center_id = f.prk_center_id
                             and p.user_id = %s
+                            where end_prk is not null
+                            and r.rating is not null
                             order by p.start_prk_at desc
                             limit {},{};'''.format(offset, limit)
 
@@ -165,7 +167,7 @@ class ParkingReviewResource(Resource) :
 
             # 주차장 사용 이력 전체 리스트 가져오기 (total)
             else : 
-                query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
+                query = '''select r.id, p.prk_plce_nm, prk_plce_adres, p.start_prk_at, p.end_prk,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
