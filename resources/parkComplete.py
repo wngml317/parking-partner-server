@@ -54,7 +54,7 @@ class DetectTextResource(Resource) :
                                         Filters={'WordFilter': {
                                             'MinConfidence': 98
                                             }})
-
+        
         con_list = []
         textDetections=response['TextDetections']
         print ('Detected text\n----------')
@@ -67,7 +67,10 @@ class DetectTextResource(Resource) :
                 print ('Type:' + text['Type'])
                 con_list.append(text['Confidence'])
                 print()
-                
+        
+        if len(con_list) == 0 :
+            return {'result' : 'error : 감지된 텍스트 없음'}
+
         index = con_list.index(max(con_list))
     
         return { 'result' : 'success',
