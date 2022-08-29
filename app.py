@@ -4,7 +4,7 @@ from flask_restful import Api
 from config import Config
 from facility import Facility
 from resources.parking import ParkingResource, ParkingListResource, ParkingInfoResource , ParkingEndResource ,ParkingLctResource
-from resources.review import ParkingReviewResource, ParkingReviewInfoResource
+from resources.review import ParkingReviewResource, ParkingReviewInfoResource, ReviewCntResource
 from resources.parkComplete import DetectTextResource, ParkingCompleteResource
 from resources.user import UserLoginResource, UserLogoutResource, UserRegisterResource, jwt_blacklist
 from resources.endParking import ParkingPayResource
@@ -38,6 +38,7 @@ api.add_resource(DetectTextResource, '/upload')
 api.add_resource(ParkingCompleteResource, '/parkingComplete')
 api.add_resource(ParkingEndResource, '/end')
 api.add_resource(ParkingLctResource, '/parkLct/<int:parking_id>')
+api.add_resource(ReviewCntResource, '/mypage')
 api.add_resource(ParkingReviewResource, '/review')
 api.add_resource(ParkingReviewInfoResource, '/review/<int:review_id>')
 api.add_resource(ParkingPayResource,'/parkingend/<int:parking_id>')

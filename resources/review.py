@@ -5,6 +5,46 @@ import mysql.connector
 from mysql_connection import get_connection
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+class ReviewCntResource(Resource) :
+    # 리뷰 갯수 가져오는 API
+    @jwt_required()
+    def get(self) :
+        user_id = get_jwt_identity()
+
+        try :
+            connection = get_connection()
+
+            query = '''select count(*) as total_cnt,
+                        count(case when rating is not null then 1 end) as write_cnt,
+                        count(case when rating is null then 1 end) as unwritten_cnt
+                        from parking p
+                        left join review r
+                        on p.id = r.prk_id
+                        where p.end_prk is not null
+                        and r.user_id = %s;'''
+
+            record = (user_id, )
+
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query, record)
+
+            result_list = cursor.fetchall()
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return { "error" : str(e) }, 503
+
+        return {"result" : "success",
+                "total_cnt" : result_list[0].get("total_cnt"),
+                "write_cnt" : result_list[0].get("write_cnt"),
+                "unwritten_cnt" : result_list[0].get("unwritten_cnt")}, 200
 
 class ParkingReviewResource(Resource) :
 
@@ -129,8 +169,6 @@ class ParkingReviewResource(Resource) :
         limit = request.args['limit']
 
         user_id = get_jwt_identity()
-        rating = []
-
         try : 
 
             connection = get_connection()
