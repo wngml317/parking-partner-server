@@ -88,7 +88,7 @@ class ParkingCompleteResource(Resource) :
         #     "prk_center_id" : "22726-11291-00002-00-1",
         #     "prk_plce_nm" : "서구청4주차장(제2청사)",
         #     "img_prk" : "https://wngml317-image-test.s3.amazonaws.com/P2022-08-22T17_37_18.562698.jpg",
-        #     "prk_cmprt_co" : "445"
+        #     "prk_area" : "445"
         # }
         data = request.get_json()
     
@@ -104,7 +104,7 @@ class ParkingCompleteResource(Resource) :
                         (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area)
                         values (%s, %s, %s, %s, %s);'''
             
-            record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_cmprt_co'])
+            record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'])
 
             # 3) 커서를 가져온다.
             cursor = connection.cursor()
