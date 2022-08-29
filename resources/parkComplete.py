@@ -69,14 +69,14 @@ class DetectTextResource(Resource) :
                 print()
         
         if len(con_list) == 0 :
-            return {'result' : 'error : 감지된 텍스트 없음'}
+            return {'error' : '감지된 텍스트 없음'}, 500
 
         index = con_list.index(max(con_list))
     
         return { 'result' : 'success',
             'img_prk' : Config.S3_LOCATION + new_file_name,
             'DetectedText' : textDetections[index].get('DetectedText'),
-            'Confidence' : textDetections[index].get('Confidence')}
+            'Confidence' : textDetections[index].get('Confidence')}, 200
 
 class ParkingCompleteResource(Resource) :
 
