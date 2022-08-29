@@ -21,7 +21,7 @@ class ReviewCntResource(Resource) :
                         left join review r
                         on p.id = r.prk_id
                         where p.end_prk is not null
-                        and r.user_id = %s;'''
+                        and p.user_id = %s;'''
 
             record = (user_id, )
 
