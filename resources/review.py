@@ -176,6 +176,7 @@ class ParkingReviewResource(Resource) :
             # 리뷰 작성한 리스트만 가져오기 (write)
             if order == 'write' :
                 query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
+                            p.parking_chrge_bs_time, p.parking_chrge_bs_chrg,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
@@ -191,6 +192,7 @@ class ParkingReviewResource(Resource) :
             # 리뷰 미작성한 리스트만 가져오기 (unwritten)
             elif order == 'unwritten' :
                 query = '''select r.id, p.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.end_prk,
+                            p.parking_chrge_bs_time, p.parking_chrge_bs_chrg,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r
@@ -206,6 +208,7 @@ class ParkingReviewResource(Resource) :
             # 주차장 사용 이력 전체 리스트 가져오기 (total)
             else : 
                 query = '''select r.id, p.prk_plce_nm, prk_plce_adres, p.start_prk_at, p.end_prk,
+                            p.parking_chrge_bs_time, p.parking_chrge_bs_chrg,
                             p.img_prk, p.prk_area, p.use_prk_at, p.end_pay, r.rating, r.content
                             from parking p
                             left join review r

@@ -329,3 +329,59 @@ class ParkingLctResource(Resource) :
         return { "result" : "success", 
                 "count" : len(result_list) ,
                 "items" : result_list}, 200
+
+    @jwt_required()
+    def put(self, parking_id) :
+
+        # 1. 클라이언트로 부터 데이터를 받아온다.
+        # {
+        #     "prk_center_id" : "22726-11291-00002-00-1",
+        #     "prk_plce_nm" : "서구청4주차장(제2청사)",
+        #     "img_prk" : "https://wngml317-image-test.s3.amazonaws.com/P2022-08-22T17_37_18.562698.jpg",
+        #     "prk_area" : "445"
+        # }
+        data = request.get_json()
+    
+        user_id = get_jwt_identity()
+
+        try : 
+            # 2. 주차 정보를 데이터베이스에 저장
+            # 1) DB에 연결
+            connection = get_connection()
+
+            if 'prk_area' not in data :
+                query = '''update parking 
+                            set prk_center_id = %s, prk_plce_nm = %s, img_prk= %s
+                            where user_id = %s and id = %s;'''
+            
+                record = (data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], user_id, parking_id)
+
+            else : 
+                # 2) 쿼리문 만들기
+                query = '''update parking 
+                            set prk_center_id = %s, prk_plce_nm = %s, img_prk= %s, prk_area = %s
+                            where user_id = %s and id = %s;'''
+                
+                record = (data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'], user_id, parking_id)
+
+            # 3) 커서를 가져온다.
+            cursor = connection.cursor()
+
+            # 4) 쿼리문을 커서를 이용하여 실행
+            cursor.execute(query, record)
+
+            # 5) 커넥션을 커밋해준다. 
+            connection.commit()
+
+            # 6) 자원 해제
+            cursor.close()
+            connection.close()
+
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+            return {"error" : str(e)}, 503
+                
+        return {"result" : "success"}, 200
