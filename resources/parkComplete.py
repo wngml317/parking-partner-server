@@ -70,7 +70,9 @@ class DetectTextResource(Resource) :
         
         if len(con_list) == 0 :
             return {'result' : 'success',
-                    'DetectedText' : ''}, 200
+                    'img_prk' : Config.S3_LOCATION + new_file_name,
+                    'DetectedText' : '',
+                    'Confidence' : 0}, 200
 
         index = con_list.index(max(con_list))
     
