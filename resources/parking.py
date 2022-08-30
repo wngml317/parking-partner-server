@@ -349,10 +349,42 @@ class ParkingLctResource(Resource) :
             # 1) DB에 연결
             connection = get_connection()
 
+            # 사용자가 저장한 주차 구역인지 확인
+            query = '''select * 
+                        from parking
+                        where id = %s and user_id = %s;'''
+
+            record = (parking_id, user_id)
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "주차구역을 수정할 권한이 없습니다."}
+
+            # 사용자가 작성한 리뷰인지 확인
+            query = '''select * 
+                        from parking
+                        where id = %s and end_prk is null;'''
+
+            record = (parking_id, )
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+
+            if len(result_list) == 0 :
+                cursor.close()
+                connection.close()
+                return {"error" : "출차한 주차정보는 수정할 수 없습니다."}
+
             if 'prk_area' not in data :
                 query = '''update parking 
-                            set prk_center_id = %s, prk_plce_nm = %s, img_prk= %s
-                            where user_id = %s and id = %s;'''
+                            set prk_center_id = %s, prk_plce_nm = %s, prk_area = null, img_prk= %s
+                            where user_id = %s 
+                            and id = %s 
+                            and end_prk is null;'''
             
                 record = (data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], user_id, parking_id)
 
@@ -360,7 +392,9 @@ class ParkingLctResource(Resource) :
                 # 2) 쿼리문 만들기
                 query = '''update parking 
                             set prk_center_id = %s, prk_plce_nm = %s, img_prk= %s, prk_area = %s
-                            where user_id = %s and id = %s;'''
+                            where user_id = %s 
+                            and id = %s
+                            and end_prk is null;'''
                 
                 record = (data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'], user_id, parking_id)
 
