@@ -69,7 +69,8 @@ class DetectTextResource(Resource) :
                 print()
         
         if len(con_list) == 0 :
-            return {'error' : '감지된 텍스트 없음'}, 500
+            return {'result' : 'success',
+                    'DetectedText' : ''}, 200
 
         index = con_list.index(max(con_list))
     
