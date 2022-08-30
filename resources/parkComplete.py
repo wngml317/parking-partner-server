@@ -102,21 +102,41 @@ class ParkingCompleteResource(Resource) :
             # 1) DB에 연결
             connection = get_connection()
 
+            # 주차 구역을 안넣을 때
             if 'prk_area' not in data :
                 query = '''insert into parking 
-                        (user_id, prk_center_id, prk_plce_nm, img_prk)
-                        values (%s, %s, %s, %s);'''
+                            (user_id, prk_center_id, prk_plce_nm, img_prk, parking_chrge_bs_time,
+                            parking_chrge_bs_chrg, parking_chrge_adit_unit_time, parking_chrge_adit_unit_chrge, parking_chrge_one_day_chrge)
+                            (
+                            select %s, %s, %s, %s,
+                            o.parking_chrge_bs_time, o.parking_chrge_bs_chrg, o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge,o.parking_chrge_one_day_chrge
+                            from operation o
+                            left join parking p
+                            on p.prk_center_id = o.prk_center_id
+                            where o.prk_center_id = %s
+                            limit 1
+                            );'''
             
-                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'])
+                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_center_id'])
 
             else : 
                 # 2) 쿼리문 만들기
                 query = '''insert into parking 
-                            (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area)
-                            values (%s, %s, %s, %s, %s);'''
+                            (user_id, prk_center_id, prk_plce_nm, img_prk, prk_area, parking_chrge_bs_time,
+                            parking_chrge_bs_chrg, parking_chrge_adit_unit_time, parking_chrge_adit_unit_chrge, parking_chrge_one_day_chrge)
+                            (
+                            select %s, %s, %s, %s, %s,
+                            o.parking_chrge_bs_time, o.parking_chrge_bs_chrg, o.parking_chrge_adit_unit_time,o.parking_chrge_adit_unit_chrge,o.parking_chrge_one_day_chrge
+                            from operation o
+                            left join parking p
+                            on p.prk_center_id = o.prk_center_id
+                            where o.prk_center_id = %s
+                            limit 1
+                            );'''
                 
-                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'])
+                record = (user_id, data['prk_center_id'], data['prk_plce_nm'], data['img_prk'], data['prk_area'], data['prk_center_id'])
 
+                print(record)
             # 3) 커서를 가져온다.
             cursor = connection.cursor()
 
