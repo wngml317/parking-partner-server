@@ -117,14 +117,13 @@ class ParkingListResource(Resource) :
                         on a.prk_center_id = d.prk_center_id
                         left join review e 
                         on d.id = e.prk_id
-                        where (a.prk_plce_entrc_la between {} - 0.01 and {} + 0.01)
-                        and (a.prk_plce_entrc_lo between {} - 0.01 and {} + 0.01)
-                        and a.prk_cmprt_co >= 30 
+                        where a.prk_cmprt_co >= 30 
                         and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
                         group by a.prk_center_id
+                        having distance <= 1000
                         order by {} {}
                         limit {}, {}
-                        ;'''.format(lat, log, lat, lat, lat, log, log, order, sort, offset, limit)
+                        ;'''.format(lat, log, lat, order, sort, offset, limit)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
@@ -155,7 +154,7 @@ class ParkingListResource(Resource) :
 
             return { "error" : str(e) }, 503
 
-        return { "result" : "success", 
+        return { "result" : "success",
                 "count" : len(result_list) ,
                 "items" : result_list}, 200
 
