@@ -22,7 +22,7 @@ class ParkingResource(Resource) :
 
             # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
             # 주차관리ID, 주차장명, 주소, 위도, 경도, 총 구획 수, 주차 이용 가능한 수, 주차 기본 시간, 주차 기본 요금
-            query = '''select a.prk_center_id, a.prk_plce_nm, a.prk_plce_adres, a.prk_plce_entrc_la, a.prk_plce_entrc_lo, a.prk_cmprt_co, 
+            query = '''select *  from (select a.prk_center_id, a.prk_plce_nm, a.prk_plce_adres, a.prk_plce_entrc_la, a.prk_plce_entrc_lo, a.prk_cmprt_co, 
                         c.pkfc_Available_ParkingLots_total, b.parking_chrge_bs_time, b.parking_chrge_bs_chrg, 
                         b.parking_chrge_adit_unit_time, b.parking_chrge_adit_unit_chrge, b.parking_chrge_one_day_chrge,
                         (6371*acos(cos(radians({}))*cos(radians(a.prk_plce_entrc_la))*cos(radians(a.prk_plce_entrc_lo)	
@@ -39,9 +39,8 @@ class ParkingResource(Resource) :
                         on d.id = e.prk_id
                         where a.prk_cmprt_co >= 30 
                         and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
-                        group by a.prk_center_id
-                        having distance <= {}
-                        order by distance;'''.format(lat, log, lat, radius)
+                        group by a.prk_center_id ) x
+                        where distance < 1;'''.format(lat, log, lat, radius)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
