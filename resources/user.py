@@ -176,9 +176,12 @@ class UserLoginResource(Resource) :
         try :
             connection = get_connection()
 
-            query = '''select *
-                    from user
-                    where email = %s;'''
+            query = '''select u.id, u.email, u.name, u.password, u.img_profile, u.created_at, max(p.id) as prk_id
+                        from user u
+                        left join parking p
+                        on u.id = p.user_id
+                        where u.email = %s
+                        and p.end_prk is null;'''
 
             record = (data['email'] , )
             
@@ -235,7 +238,8 @@ class UserLoginResource(Resource) :
         return {'result' : 'success', 
                 'access_token' : access_token,
                 'name' : user_info['name'],
-                'img_profile' : user_info['img_profile']}, 200
+                'img_profile' : user_info['img_profile'],
+                'prk_id' : user_info['prk_id']}, 200
 
 
 jwt_blacklist = set()
