@@ -15,12 +15,8 @@ class ParkingResource(Resource) :
 
             # 1. 클라이언트로부터 데이터를 받아온다.
             # 현재 위치 또는 목적지 위도, 경도 데이터
-            lat = float(request.args['lat'])
-            log = float(request.args['log'])
-
-            # 반경 미터 설정 radius
-            # 100m : radius = 1, 200m : radius = 2, 300m : radius = 3,
-            # 500m : radius = 5, 700m : radius = 7, 1km : radius = 10
+            lat = request.args['lat']
+            log = request.args['log']
             radius = float(request.args['radius']) * 0.001
             print(radius)
 
@@ -29,6 +25,8 @@ class ParkingResource(Resource) :
             query = '''select a.prk_center_id, a.prk_plce_nm, a.prk_plce_adres, a.prk_plce_entrc_la, a.prk_plce_entrc_lo, a.prk_cmprt_co, 
                         c.pkfc_Available_ParkingLots_total, b.parking_chrge_bs_time, b.parking_chrge_bs_chrg, 
                         b.parking_chrge_adit_unit_time, b.parking_chrge_adit_unit_chrge, b.parking_chrge_one_day_chrge,
+                        (6371*acos(cos(radians({}))*cos(radians(a.prk_plce_entrc_la))*cos(radians(a.prk_plce_entrc_lo)	
+                        -radians({}))+sin(radians({}))*sin(radians(a.prk_plce_entrc_la)))) AS distance,
                         round(avg(e.rating),2) as rating
                         from facility a
                         join operation b
@@ -39,11 +37,11 @@ class ParkingResource(Resource) :
                         on a.prk_center_id = d.prk_center_id
                         left join review e 
                         on d.id = e.prk_id
-                        where (a.prk_plce_entrc_la between {} and {})
-                        and (a.prk_plce_entrc_lo between {} and {})
-                        and a.prk_cmprt_co >= 30 
+                        where a.prk_cmprt_co >= 30 
                         and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
-                        group by a.prk_center_id;'''.format(lat - radius, lat + radius, log - radius, log + radius)
+                        group by a.prk_center_id
+                        having distance <= {}
+                        order by distance;'''.format(lat, log, lat, radius)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
