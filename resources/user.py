@@ -176,15 +176,12 @@ class UserLoginResource(Resource) :
         try :
             connection = get_connection()
 
-            query = '''select u.id, u.email, u.name, u.password, u.img_profile, u.created_at, max(p.id) as prk_id
-                        from user u
-                        left join parking p
-                        on u.id = p.user_id
-                        where u.email = %s
-                        and p.end_prk is null;'''
-
+            # 2-1. 로그인 정보 확인
+            query = '''select id, email, name, password, img_profile
+                        from user
+                        where email = %s'''
             record = (data['email'] , )
-            
+
             # select 문은, dictionary = True 를 해준다.
             cursor = connection.cursor(dictionary = True)
 
@@ -193,16 +190,39 @@ class UserLoginResource(Resource) :
             # select 문은, 아래 함수를 이용해서, 데이터를 가져온다.
             result_list = cursor.fetchall()
 
-            print(result_list)
+            # 2-2. 출차 안한 주차 정보 있는지 확인
+            query2 = '''select max(p.id) as prk_id, f.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.img_prk, 
+                        p.prk_area, p.parking_chrge_bs_time, p.parking_chrge_bs_chrg, p.parking_chrge_adit_unit_time, 
+                        p.parking_chrge_adit_unit_chrge, p.parking_chrge_one_day_chrge
+                        from user u
+                        left join parking p
+                        on u.id = p.user_id
+                        left join facility f
+                        on p.prk_center_id = f.prk_center_id
+                        where u.email = %s
+                        and p.end_prk is null;'''
+
+            record = (data['email'] , )
+            
+            # select 문은, dictionary = True 를 해준다.
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query2, record)
+
+            # select 문은, 아래 함수를 이용해서, 데이터를 가져온다.
+            parking_list = cursor.fetchall()
 
             # 중요! 디비에서 가져온 timestamp 는 
             # 파이썬의 datetime 으로 자동 변경된다.
             # 문제는! 이데이터를 json 으로 바로 보낼수 없으므로,
             # 문자열로 바꿔서 다시 저장해서 보낸다.
             i = 0
-            for record in result_list :
-                result_list[i]['created_at'] = record['created_at'].isoformat()
-                i = i + 1                
+            for record in parking_list :
+                if parking_list[i]['start_prk_at'] != None :
+                    parking_list[i]['start_prk_at'] = record['start_prk_at'].isoformat()
+                    i = i + 1  
+ 
+            print(parking_list)              
 
             cursor.close()
             connection.close()
@@ -237,9 +257,9 @@ class UserLoginResource(Resource) :
 
         return {'result' : 'success', 
                 'access_token' : access_token,
-                'name' : user_info['name'],
+                'email' : user_info['email'],
                 'img_profile' : user_info['img_profile'],
-                'prk_id' : user_info['prk_id']}, 200
+                'items' : parking_list}, 200
 
 
 jwt_blacklist = set()
