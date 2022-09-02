@@ -191,7 +191,7 @@ class UserLoginResource(Resource) :
             result_list = cursor.fetchall()
 
             # 2-2. 출차 안한 주차 정보 있는지 확인
-            query2 = '''select max(p.id) as prk_id, f.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.img_prk, 
+            query2 = '''select p.id as prk_id, f.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.img_prk, 
                         p.prk_area, p.parking_chrge_bs_time, p.parking_chrge_bs_chrg, p.parking_chrge_adit_unit_time, 
                         p.parking_chrge_adit_unit_chrge, p.parking_chrge_one_day_chrge
                         from user u
@@ -200,7 +200,9 @@ class UserLoginResource(Resource) :
                         left join facility f
                         on p.prk_center_id = f.prk_center_id
                         where u.email = %s
-                        and p.end_prk is null;'''
+                        and p.end_prk is null
+                        order by p.id desc
+                        limit 1;'''
 
             record = (data['email'] , )
             
@@ -234,7 +236,6 @@ class UserLoginResource(Resource) :
 
             return {"error" : str(e)}, 503
 
-        
         # 3. result_list 의 행의 갯수가 1개이면,
         # 유저 데이터를 정상적으로 받아온것이고
         # 행의 갯수가 0이면, 요청한 이메일은, 회원가입이
@@ -245,7 +246,6 @@ class UserLoginResource(Resource) :
 
         # 4. 비밀번호가 맞는지 확인한다.
         user_info = result_list[0]
-        park_info = parking_list[0]
 
         # data['password'] 와 user_info['password']를 비교
 
@@ -255,6 +255,28 @@ class UserLoginResource(Resource) :
             return {'error' : '비밀번호가 맞지 않습니다.'}
 
         access_token = create_access_token( user_info['id'])
+
+        # 5. 주차 정보 있는지 확인
+        if len(parking_list) == 0 :
+            return {'result' : 'success', 
+                'access_token' : access_token,
+                'email' : user_info['email'],
+                'name' : user_info['name'],
+                'img_profile' : user_info['img_profile'],
+                'prk_id' : 0,
+                'prk_plce_nm' : None,
+                'prk_plce_adres' : None,
+                'start_prk_at' : None,
+                'img_prk' : None,
+                'prk_area' : None,
+                'parking_chrge_bs_time' : 0,
+                'parking_chrge_bs_chrg' : 0,
+                'parking_chrge_adit_unit_time' : 0,
+                'parking_chrge_adit_unit_chrge' : 0,
+                'parking_chrge_one_day_chrge' : 0,}, 200
+
+
+        park_info = parking_list[0]
 
         return {'result' : 'success', 
                 'access_token' : access_token,
