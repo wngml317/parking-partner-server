@@ -258,6 +258,7 @@ class UserLoginResource(Resource) :
         return {'result' : 'success', 
                 'access_token' : access_token,
                 'email' : user_info['email'],
+                'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
                 'items' : parking_list}, 200
 
