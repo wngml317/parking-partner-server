@@ -261,6 +261,7 @@ class UserLoginResource(Resource) :
                 'email' : user_info['email'],
                 'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
+                'prk_id' : park_info['prk_id'],
                 'prk_plce_nm' : park_info['prk_plce_nm'],
                 'prk_plce_adres' : park_info['prk_plce_adres'],
                 'start_prk_at' : park_info['start_prk_at'],
