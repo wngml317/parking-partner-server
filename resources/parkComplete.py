@@ -50,10 +50,7 @@ class DetectTextResource(Resource) :
         # 4. detection_text를 수행해서 레이블의 감지된 텍스트를 가져온다.
         # 감지 신뢰도가 98% 이상인 데이터만
         response = client.detect_text(Image = {'S3Object' : 
-                                        {'Bucket' : Config.S3_BUCKET, 'Name' : new_file_name}},
-                                        Filters={'WordFilter': {
-                                            'MinConfidence': 98
-                                            }})
+                                        {'Bucket' : Config.S3_BUCKET, 'Name' : new_file_name}})
         
         con_list = []
         textDetections=response['TextDetections']
