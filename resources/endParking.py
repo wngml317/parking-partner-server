@@ -113,10 +113,30 @@ class ParkingPayResource(Resource) :
 
             # 4. 쿼리문을 커서를 이용해서 실행한다.
             cursor.execute(query, record)
-            
 
             # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
             connection.commit()
+
+
+
+            query = '''select end_prk
+            from parking
+            where id = %s and end_prk is not null; '''
+
+            record = (parking_id,)
+
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(query, record)
+            result_list = cursor.fetchall()
+            print(result_list)
+
+
+            i=0
+            for record in result_list :
+                result_list[i]['end_prk'] = record['end_prk'].isoformat()
+                i = i + 1  
+            
+
 
             # 6. 자원 해제
             cursor.close()
@@ -128,4 +148,6 @@ class ParkingPayResource(Resource) :
                 connection.close()
                 return {'error' : str(e)}, 503
 
-        return {'result' :'success'}, 200
+        return { "result" : "success", 
+                "count" : len(result_list) ,
+                "items" : result_list }, 200
