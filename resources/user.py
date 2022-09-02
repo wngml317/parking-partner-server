@@ -245,6 +245,7 @@ class UserLoginResource(Resource) :
 
         # 4. 비밀번호가 맞는지 확인한다.
         user_info = result_list[0]
+        park_info = parking_list[0]
 
         # data['password'] 와 user_info['password']를 비교
 
@@ -260,7 +261,16 @@ class UserLoginResource(Resource) :
                 'email' : user_info['email'],
                 'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
-                'items' : parking_list}, 200
+                'prk_plce_nm' : park_info['prk_plce_nm'],
+                'prk_plce_adres' : park_info['prk_plce_adres'],
+                'start_prk_at' : park_info['start_prk_at'],
+                'img_prk' : park_info['img_prk'],
+                'prk_area' : park_info['prk_area'],
+                'parking_chrge_bs_time' : park_info['parking_chrge_bs_time'],
+                'parking_chrge_bs_chrg' : park_info['parking_chrge_bs_chrg'],
+                'parking_chrge_adit_unit_time' : park_info['parking_chrge_adit_unit_time'],
+                'parking_chrge_adit_unit_chrge' : park_info['parking_chrge_adit_unit_chrge'],
+                'parking_chrge_one_day_chrge' : park_info['parking_chrge_one_day_chrge'],}, 200
 
 
 jwt_blacklist = set()
