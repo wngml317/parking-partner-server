@@ -191,7 +191,7 @@ class UserLoginResource(Resource) :
             result_list = cursor.fetchall()
 
             # 2-2. 출차 안한 주차 정보 있는지 확인
-            query2 = '''select p.id as prk_id, f.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.img_prk, 
+            query2 = '''select p.id as prk_id, f.prk_center_id, f.prk_plce_nm, f.prk_plce_adres, p.start_prk_at, p.img_prk, 
                         p.prk_area, p.parking_chrge_bs_time, p.parking_chrge_bs_chrg, p.parking_chrge_adit_unit_time, 
                         p.parking_chrge_adit_unit_chrge, p.parking_chrge_one_day_chrge
                         from user u
@@ -264,6 +264,7 @@ class UserLoginResource(Resource) :
                 'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
                 'prk_id' : 0,
+                'prk_center_id' : None,
                 'prk_plce_nm' : None,
                 'prk_plce_adres' : None,
                 'start_prk_at' : None,
@@ -284,6 +285,7 @@ class UserLoginResource(Resource) :
                 'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
                 'prk_id' : park_info['prk_id'],
+                'prk_center_id' : park_info['prk_center_id'],
                 'prk_plce_nm' : park_info['prk_plce_nm'],
                 'prk_plce_adres' : park_info['prk_plce_adres'],
                 'start_prk_at' : park_info['start_prk_at'],
@@ -293,7 +295,7 @@ class UserLoginResource(Resource) :
                 'parking_chrge_bs_chrg' : park_info['parking_chrge_bs_chrg'],
                 'parking_chrge_adit_unit_time' : park_info['parking_chrge_adit_unit_time'],
                 'parking_chrge_adit_unit_chrge' : park_info['parking_chrge_adit_unit_chrge'],
-                'parking_chrge_one_day_chrge' : park_info['parking_chrge_one_day_chrge'],}, 200
+                'parking_chrge_one_day_chrge' : park_info['parking_chrge_one_day_chrge']}, 200
 
 
 jwt_blacklist = set()
