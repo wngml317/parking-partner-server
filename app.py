@@ -45,6 +45,6 @@ api.add_resource(ParkingPayResource,'/parkingend/<int:parking_id>')
 
 api.add_resource(Facility, '/facility')
 
-
+#host="192.168.0.167",port=5000
 if __name__ == '__main__' :
     app.run()
