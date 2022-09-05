@@ -255,7 +255,8 @@ class UserLoginResource(Resource) :
         access_token = create_access_token( user_info['id'])
 
         # 5. 주차 정보 있는지 확인
-        if len(parking_list) == 0 :
+        print(parking_list)
+        if len(parking_list) == 0 or parking_list[0]['start_prk_at'] is None:
             return {'result' : 'success', 
                 'access_token' : access_token,
                 'email' : user_info['email'],
@@ -272,7 +273,7 @@ class UserLoginResource(Resource) :
                 'parking_chrge_bs_chrg' : 0,
                 'parking_chrge_adit_unit_time' : 0,
                 'parking_chrge_adit_unit_chrge' : 0,
-                'parking_chrge_one_day_chrge' : 0,}, 200
+                'parking_chrge_one_day_chrge' : 0}, 200
 
 
         park_info = parking_list[0]
