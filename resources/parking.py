@@ -86,9 +86,17 @@ class ParkingListResource(Resource) :
             limit = request.args['limit']
 
             if order == 'available' : 
-                sort = 'desc'
-            else :
-                sort = 'asc'
+                order1 = 'available desc'
+                order2 = 'distance'
+                order3 = 'charge'
+            elif order == 'charge':
+                order1 = 'charge'
+                order2 = 'distance'
+                order3 = 'available desc'
+            elif order == 'distance' :
+                order1 = 'distance'
+                order2 = 'charge'
+                order3 = 'available desc'
 
 
             # 주차 구획 수 30개 이상이고, 주차장명, 위도, 경도 null 값이 아닐 때,
@@ -118,9 +126,9 @@ class ParkingListResource(Resource) :
                         and a.prk_plce_nm not like '%아파트%' and a.prk_plce_nm not like '%학교%'
                         group by a.prk_center_id
                         having distance <= 1000
-                        order by {} {}
+                        order by {}, {}, {}
                         limit {}, {}
-                        ;'''.format(lat, log, lat, order, sort, offset, limit)
+                        ;'''.format(lat, log, lat, order1, order2, order3, offset, limit)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
