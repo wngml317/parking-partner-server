@@ -222,9 +222,7 @@ class UserLoginResource(Resource) :
             for record in parking_list :
                 if parking_list[i]['start_prk_at'] != None :
                     parking_list[i]['start_prk_at'] = record['start_prk_at'].isoformat()
-                    i = i + 1  
- 
-            print(parking_list)              
+                    i = i + 1               
 
             cursor.close()
             connection.close()
@@ -264,12 +262,12 @@ class UserLoginResource(Resource) :
                 'name' : user_info['name'],
                 'img_profile' : user_info['img_profile'],
                 'prk_id' : 0,
-                'prk_center_id' : None,
-                'prk_plce_nm' : None,
-                'prk_plce_adres' : None,
-                'start_prk_at' : None,
-                'img_prk' : None,
-                'prk_area' : None,
+                'prk_center_id' : "",
+                'prk_plce_nm' : "",
+                'prk_plce_adres' : "",
+                'start_prk_at' : "",
+                'img_prk' : "",
+                'prk_area' : "",
                 'parking_chrge_bs_time' : 0,
                 'parking_chrge_bs_chrg' : 0,
                 'parking_chrge_adit_unit_time' : 0,
