@@ -46,7 +46,7 @@ class ParkingPayResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "출차한 차량은 요금을 계산할 수 없습니다."}
+                return {"error" : "출차한 차량은 요금을 계산할 수 없습니다."}, 400
 
             i=0
             for record in result_list :
@@ -94,7 +94,7 @@ class ParkingPayResource(Resource) :
             if len(result_list) != 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "출차 처리가 완료된 차량 입니다."}
+                return {"error" : "출차 처리가 완료된 차량 입니다."}, 400
 
 
              # 2. 쿼리문 만들기
@@ -129,6 +129,7 @@ class ParkingPayResource(Resource) :
             cursor.execute(query, record)
             result_list = cursor.fetchall()
             print(result_list)
+
 
 
             i=0

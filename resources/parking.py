@@ -295,7 +295,7 @@ class ParkingLctResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "위치를 조회할 권한이 없습니다."}
+                return {"error" : "위치를 조회할 권한이 없습니다."}, 401
 
             # 1. 클라이언트로부터 데이터를 받아온다.
             query = '''select p.id,p.img_prk,p.prk_plce_nm,p.prk_area,p.start_prk_at,f.prk_plce_adres
@@ -319,7 +319,7 @@ class ParkingLctResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "이미 출차하였습니다."}
+                return {"error" : "이미 출차하였습니다."}, 400
 
             # float 타입으로 변환
             i=0
@@ -341,6 +341,7 @@ class ParkingLctResource(Resource) :
                 "count" : len(result_list) ,
                 "items" : result_list}, 200
 
+    # 주차 위치 수정하는 API
     @jwt_required()
     def put(self, parking_id) :
 
@@ -373,7 +374,7 @@ class ParkingLctResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "주차구역을 수정할 권한이 없습니다."}
+                return {"error" : "주차구역을 수정할 권한이 없습니다."}, 401
 
             # 사용자가 작성한 리뷰인지 확인
             query = '''select * 
@@ -388,7 +389,7 @@ class ParkingLctResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "출차한 주차정보는 수정할 수 없습니다."}
+                return {"error" : "출차한 주차정보는 수정할 수 없습니다."}, 400
 
             if 'prk_area' not in data :
                 query = '''update parking 

@@ -311,7 +311,7 @@ class ParkingReviewInfoResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "리뷰를 수정할 권한이 없습니다."}
+                return {"error" : "리뷰를 수정할 권한이 없습니다."}, 401
 
 
             # 리뷰 수정 ( 내용 유 / 무 )
