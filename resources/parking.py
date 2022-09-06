@@ -230,11 +230,12 @@ class ParkingEndResource(Resource) :
                         FROM facility f
                         join operation o
                         on f.prk_center_id = o.prk_center_id
-                        where (f.prk_plce_entrc_la between 37.544048333333336 - 0.003 and 37.544048333333336 + 0.003)
-                        and (f.prk_plce_entrc_lo between 126.67697666666666 - 0.003 and 126.67697666666666 + 0.003)
+                        where (f.prk_plce_entrc_la between {} - 0.003 and {} + 0.003)
+                        and (f.prk_plce_entrc_lo between {} - 0.003 and {} + 0.003)
                         and f.prk_cmprt_co >= 30 
+                        and f.prk_plce_nm not like '%아파트%' and f.prk_plce_nm not like '%학교%'
                         ORDER BY distance 
-                        LIMIT 1;'''.format(lat, log, lat)
+                        LIMIT 1;'''.format(lat, log, lat, lat, lat, log, log)
 
             # select 문은 dictionary=True 를 해준다.
             cursor = connection.cursor(dictionary = True)
