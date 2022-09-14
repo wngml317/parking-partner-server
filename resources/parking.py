@@ -109,7 +109,7 @@ class ParkingListResource(Resource) :
                         c.pkfc_Available_ParkingLots_total, b.parking_chrge_bs_time, b.parking_chrge_bs_chrg, 
                         b.parking_chrge_adit_unit_time, b.parking_chrge_adit_unit_chrge, b.parking_chrge_one_day_chrge,
                         round(avg(e.rating),2) as rating,
-                        if(c.pkfc_Available_ParkingLots_total is null, a.prk_cmprt_co, a.prk_cmprt_co - c.pkfc_Available_ParkingLots_total) as available,
+                        if(c.pkfc_Available_ParkingLots_total is null, a.prk_cmprt_co, c.pkfc_Available_ParkingLots_total) as available,
                         round(6371*acos(cos(radians({}))*cos(radians(a.prk_plce_entrc_la))*cos(radians(a.prk_plce_entrc_lo)
                         -radians({}))+sin(radians({}))*sin(radians(a.prk_plce_entrc_la)))*1000) as distance,
                         floor(b.parking_chrge_bs_chrg / b.parking_chrge_bs_time) as charge

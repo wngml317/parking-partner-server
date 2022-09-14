@@ -80,7 +80,7 @@ class ParkingReviewResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "이용하지 않은 주차장 리뷰는 작성할 수 없습니다."}
+                return {"error" : "이용하지 않은 주차장 리뷰는 작성할 수 없습니다."}, 401
 
             # 리뷰 작성을 위해 출차를 했는지 확인
             query = '''select * 
@@ -102,7 +102,7 @@ class ParkingReviewResource(Resource) :
             if len(result_list) == 0 :
                 cursor.close()
                 connection.close()
-                return {"error" : "출차 후 리뷰를 작성할 수 있습니다."}
+                return {"error" : "출차 후 리뷰를 작성할 수 있습니다."}, 400
 
             # 별점을 준 주차장인지 확인
             query = '''select * from review
@@ -122,7 +122,7 @@ class ParkingReviewResource(Resource) :
             if len(result_list) == 1 :
                 cursor.close()
                 connection.close()
-                return {"error" : "이미 별점을 주었습니다."}
+                return {"error" : "이미 별점을 주었습니다."}, 400
 
             # 2. 디비에 insert
             # 리뷰 내용이 없을 때 / 있을 때
@@ -253,7 +253,6 @@ class ParkingReviewResource(Resource) :
 class ParkingReviewInfoResource(Resource) :
 
     # 하나의 리뷰 가져오는 API
-    @jwt_required()
     def get(self, review_id) :
 
         try :
