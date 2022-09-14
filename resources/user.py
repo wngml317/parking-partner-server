@@ -1,4 +1,5 @@
 from datetime import datetime
+import email
 from flask import request
 from flask_jwt_extended import create_access_token, get_jwt, jwt_required
 from flask_restful import Resource
@@ -158,6 +159,138 @@ class UserRegisterResource(Resource) :
                     'access_token' : access_token,
                     'img_profile' :  Config.S3_LOCATION + new_file_name}, 200
 
+    def put(self) :
+
+        # 1. 클라이언트로부터 데이터를 받아온다.
+        # email(text), password(text), name(text), img_profile(file)
+
+        email = request.form['email']
+        password = request.form['password']
+        name = request.form['name']
+
+        # 2. 이메일 주소형식이 제대로 된 주소형식인지
+        # 확인하는 코드 작성.
+
+        try :
+            validate_email( email )
+        except EmailNotValidError as e:
+            # email is not valid, exception message is human-readable
+            print(str(e))
+            return {'error' : str(e)} , 400        
+        
+        # 3. 비밀번호의 길이가 유효한지 체크한다.
+        # 비번길이는 4자리 이상, 8자리 이하로만!
+        if len(password) < 4 or len(password) > 8 :
+            return {'error' : '비밀번호는 4자리 이상 8자리 이하로 입력'}, 400
+
+        # 4. 비밀번호를 암호화 한다.
+        hashed_password = hash_password( password )
+        print(hashed_password)
+
+
+        # 5-1. 프로필 사진이 없을 때
+        if 'img_profile' not in request.files :
+            print('img_profile no')
+            # 6. 데이터베이스에 회원정보를 저장한다!!
+            try :
+                # 데이터 insert 
+                # 1. DB에 연결
+                connection = get_connection()
+                
+                # 2. 쿼리문 만들기
+                query = '''update user
+                            set password=%s
+                                ,name=%s
+                            where email=%s
+                            ;'''
+                record = (hashed_password, name, email)
+
+                # 3. 커서를 가져온다.
+                cursor = connection.cursor()
+
+                # 4. 쿼리문을 커서를 이용해서 실행한다.
+                cursor.execute(query, record)
+
+                # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
+                connection.commit()
+
+                # 6. 자원 해제
+                cursor.close()
+                connection.close()
+
+            except mysql.connector.Error as e :
+                print(e)
+                cursor.close()
+                connection.close()
+                return {"error" : str(e)}, 503
+
+            return {'result' : 'success', 
+                    'img_profile' :  ''}, 200
+
+        else :
+            # 5-2. 프로필 사진이 있을 때
+            # S3에 파일을 업로드 한다.
+            # 파일명을 우리가 변경해 준다.
+            # 파일명은 유니크하게 만들어야 한다.
+            
+            img_profile = request.files['img_profile']
+            
+            current_time = datetime.now()
+            new_file_name = 'U' + current_time.isoformat().replace(':','_') + '.jpg'
+
+            # 유저가 올린 파일의 이름을 내가 만든 파일명으로 변경
+            img_profile.filename = new_file_name
+
+            # S3 에 업로드 하면 된다.
+            # AWS의 라이브러리를 사용해야 한다.
+            # 이 파이썬 라이브러리가 boto3 라이브러리다
+            # boto3 라이브러리 설치
+            # pip install boto3
+            s3 = boto3.client('s3', aws_access_key_id = Config.ACCESS_KEY, aws_secret_access_key = Config.SECRET_ACCESS)        
+
+            try :
+                s3.upload_fileobj(img_profile, Config.S3_BUCKET, img_profile.filename, 
+                                    ExtraArgs = {'ACL' : 'public-read', 'ContentType' : img_profile.content_type})
+
+            except Exception as e:
+                return {'error' : str(e)}, 500
+
+            # 6. 데이터베이스에 회원정보를 저장한다!!
+            try :
+                # 데이터 insert 
+                # 1. DB에 연결
+                connection = get_connection()
+
+                # 2. 쿼리문 만들기
+                query = '''update user
+                            set password=%s
+                                ,name=%s
+                                ,img_profile=%s
+                            where email=%s
+                            ;'''
+                record = (hashed_password, name, Config.S3_LOCATION + new_file_name, email)
+
+                # 3. 커서를 가져온다.
+                cursor = connection.cursor()
+
+                # 4. 쿼리문을 커서를 이용해서 실행한다.
+                cursor.execute(query, record)
+
+                # 5. 커넥션을 커밋해줘야 한다 => 디비에 영구적으로 반영하라는 뜻
+                connection.commit()
+
+                # 6. 자원 해제
+                cursor.close()
+                connection.close()
+
+            except mysql.connector.Error as e :
+                print(e)
+                cursor.close()
+                connection.close()
+                return {"error" : str(e)}, 503
+
+            return {'result' : 'success', 
+                    'img_profile' :  Config.S3_LOCATION + new_file_name}, 200
 
 class UserLoginResource(Resource) :
 
@@ -296,6 +429,55 @@ class UserLoginResource(Resource) :
                 'parking_chrge_adit_unit_chrge' : park_info['parking_chrge_adit_unit_chrge'],
                 'parking_chrge_one_day_chrge' : park_info['parking_chrge_one_day_chrge']}, 200
 
+    def get(self) :
+        # 1. 클라이언트로부터 쿼리스트링로 넘어온 데이터를 받아온다.
+        #     "email": "abc@naver.com",
+
+        email = request.args['email']
+
+        # 2. 이메일로, DB에 이 이메일과 일치하는 데이터를
+        # 가져온다.
+
+        try :
+            connection = get_connection()
+
+            # 2-1. 로그인 정보 확인
+            query = '''select email, name, img_profile
+                        from user
+                        where email = %s'''
+            record = (email , )
+
+            # select 문은, dictionary = True 를 해준다.
+            cursor = connection.cursor(dictionary = True)
+
+            cursor.execute(query, record)
+
+            # select 문은, 아래 함수를 이용해서, 데이터를 가져온다.
+            result_list = cursor.fetchall()    
+
+            cursor.close()
+            connection.close()
+
+        except mysql.connector.Error as e :
+            print(e)
+            cursor.close()
+            connection.close()
+
+            return {"error" : str(e)}, 503
+
+        # 3. result_list 의 행의 갯수가 1개이면,
+        # 유저 데이터를 정상적으로 받아온것이고
+        # 행의 갯수가 0이면, 요청한 이메일은, 회원가입이
+        # 되어 있지 않은 이메일이다.
+        if len(result_list) != 1 :
+            return {'error' : '회원가입이 안된 이메일입니다.'}, 400
+
+        user_info = result_list[0]
+
+        return {'result' : 'success', 
+            'email' : user_info['email'],
+            'name' : user_info['name'],
+            'img_profile' : user_info['img_profile']}, 200
 
 jwt_blacklist = set()
 
